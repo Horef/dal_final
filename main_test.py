@@ -16,7 +16,7 @@ if __name__ == "__main__":
     for pdf_file in pdf_files:
         pdf_path = os.path.join(raw_data_path, pdf_file)
         try:
-            text = extract_text_from_pdf(pdf_path, rtl=True, two_cols=True, max_pages=3)
+            text = extract_text_from_pdf(pdf_path, rtl=True, two_cols=True, max_pages=None)
             # save the extracted text to a file
             output_file = os.path.join(processed_data_path, f"{os.path.splitext(pdf_file)[0]}.txt")
             with open(output_file, 'w', encoding='utf-8') as f:
