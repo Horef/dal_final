@@ -41,6 +41,8 @@ args = get_args()
 
 if args.model == "PHI":
     LLM_MODEL = "microsoft/Phi-3.5-mini-instruct"
+elif args.model == "aya":
+    LLM_MODEL = "CohereLabs/aya-23-8B"
 elif args.model == "GLM":
     LLM_MODEL = "THUDM/glm-edge-1.5b-chat"
 elif args.model == "MiniCPM":
@@ -130,5 +132,4 @@ def run_experiment(output_path):
 
 
 # if __name__ == "__main__":
-
 run_experiment(OUTPUT_PATH)
