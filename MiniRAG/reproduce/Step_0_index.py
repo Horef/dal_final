@@ -62,15 +62,15 @@ args = get_args()
 
 # Map CLI choice to HF model names (you can swap to any compatible instruct model)
 if args.model == "PHI":
-    HF_LLM = "microsoft/Phi-2"
+    HF_LLM = "bigscience/bloomz-560m"          # instruction-tuned, multilingual (incl. Hebrew)
 elif args.model == "aya":
-    HF_LLM = "CohereLabs/aya-23-8B"
+    HF_LLM = "bigscience/bloom-1b1"            # slightly larger, still fine on 8GB
 elif args.model == "GLM":
-    HF_LLM = "THUDM/glm-edge-1.5b-chat"
+    HF_LLM = "THUDM/glm-edge-1.5b-chat"        # may fit; if OOM, switch to PHI option above
 elif args.model == "MiniCPM":
-    HF_LLM = "openbmb/MiniCPM3-4B"
+    HF_LLM = "openbmb/MiniCPM3-4B"             # might OOM on 8GB; prefer PHI/aya
 elif args.model == "qwen":
-    HF_LLM = "Qwen/Qwen2.5-3B-Instruct"  # strong multilingual (incl. Hebrew)
+    HF_LLM = "Qwen/Qwen2.5-3B-Instruct"        # multilingual; may OOM on 8GB
 else:
     print("Invalid model name. Use: PHI | aya | GLM | MiniCPM | qwen")
     sys.exit(1)
@@ -89,33 +89,47 @@ os.makedirs(WORKING_DIR, exist_ok=True)
 # Build a single HF text-gen pipeline (loads once)
 # ----------------------------
 
-_device_map = "auto"
-_dtype = torch.bfloat16 if torch.cuda.is_available() else torch.float32
+# _device_map = "auto"
+# _dtype = torch.bfloat16 if torch.cuda.is_available() else torch.float32
+
+_dtype = torch.float32
 
 # Some small models lack pad/eos; we set sane fallbacks after loading tokenizer
 _hf_tokenizer = AutoTokenizer.from_pretrained(HF_LLM, trust_remote_code=True)
 _hf_model = AutoModelForCausalLM.from_pretrained(
     HF_LLM,
     torch_dtype=_dtype,
-    device_map=_device_map,
-    trust_remote_code=True,
+    low_cpu_mem_usage=False,        # safer with older torch
+    trust_remote_code=False,
 )
+
 
 # Fallback ids
 if _hf_tokenizer.pad_token_id is None:
-    # Prefer eos as pad if missing
     if _hf_tokenizer.eos_token_id is not None:
         _hf_tokenizer.pad_token = _hf_tokenizer.eos_token
     else:
         _hf_tokenizer.add_special_tokens({"pad_token": "[PAD]"})
         _hf_model.resize_token_embeddings(len(_hf_tokenizer))
 
+# Manual device placement (M60: CC 5.2; torch 1.13.1 works)
+device_arg = -1
+if torch.cuda.is_available():
+    try:
+        maj, minr = torch.cuda.get_device_capability(0)
+        if (maj, minr) >= (5, 2):    # Tesla M60 is 5.2
+            _hf_model.to("cuda:0")
+            device_arg = 0
+    except Exception:
+        device_arg = -1
+
 _hf_pipe = pipeline(
     "text-generation",
     model=_hf_model,
     tokenizer=_hf_tokenizer,
-    # device is handled via device_map inside model
+    device=device_arg,
 )
+
 
 async def hf_model_complete(prompt: str, **kwargs) -> str:
     """
@@ -124,7 +138,7 @@ async def hf_model_complete(prompt: str, **kwargs) -> str:
     """
     gen = _hf_pipe(
         prompt,
-        max_new_tokens=256,
+        max_new_tokens=128,
         do_sample=True,
         temperature=0.2,
         top_p=0.9,
@@ -187,7 +201,7 @@ def main():
     for idx, chunk_path in enumerate(chunks, start=1):
         print(f"{idx}/{total}  {chunk_path}")
         with open(chunk_path, "r", encoding="utf-8", errors="ignore") as f:
-            rag.insert(f.read())   # ← fixed: no space, correct method name
+            rag.insert(f.read())
 
     print("INFO: Document processing pipeline completed")
     print("INFO: If entity extraction is enabled in MiniRAG, it will run automatically.")
