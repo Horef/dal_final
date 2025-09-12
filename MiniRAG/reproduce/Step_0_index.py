@@ -88,9 +88,8 @@ def find_txt_files(root_path):
     return txt_files
 
 
-WEEK_LIST = find_txt_files(DATA_PATH)
-for WEEK in WEEK_LIST:
-    id = WEEK_LIST.index(WEEK)
-    print(f"{id}/{len(WEEK_LIST)}")
-    with open(WEEK) as f:
+chunks = find_txt_files(DATA_PATH)
+for id, chunk in enumerate(chunks):
+    print(f"{id}/{len(chunks)}")
+    with open(chunk) as f:
         rag.insert(f.read())
