@@ -1,0 +1,7 @@
+אסינכרוני בממשק משתמש , שפות הפיתוח ,HTML ,CSS JAVASCRIPT ו -
+.TYPESCRIPT 4 . לפתח יישומים בספריות מבוססות JAVASCRIPT כגון
+NODE.JS ו-.REACT 5 . עקרונות פיתוח בצד השרת END(( BACK שרתים
+ופרוטוקולים , HTTP/HTTPS , זיכרון בין פניות COOKIE( SESSION, -) מיקרו
+שירותים MICROSERVICES( ), אימות משתמשים AUTHENTICATION((
+תכנות מונחה אירועים .
+.6 . להשתמש במסדי נתונים במסגרת יישום באינטרנט

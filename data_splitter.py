@@ -17,6 +17,7 @@
 from __future__ import annotations
 import re, json
 from typing import List, Dict, Optional
+import os
 
 # --- Heuristics & Regexes ---
 
@@ -191,3 +192,9 @@ def build_chunks_from_pdf(pdf_path: str, *, extract_fn, rtl=True, two_cols=True,
 def write_chunks_jsonl(chunks: List[Dict], outfile: str) -> None:
     with open(outfile, "w", encoding="utf-8") as f:
         for ch in chunks: f.write(json.dumps(ch, ensure_ascii=False)+"\n")
+
+def write_chunks_txt(chunks: List[Dict], outdir: str) -> None:
+    os.makedirs(outdir, exist_ok=True)
+    for ch in chunks:
+        with open(os.path.join(outdir, f"chunk_{ch['id']}.txt"), "w", encoding="utf-8") as f:
+            f.write(ch["text"] + "\n")

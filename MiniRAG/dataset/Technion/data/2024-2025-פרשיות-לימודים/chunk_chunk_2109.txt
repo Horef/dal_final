@@ -1,0 +1,2 @@
+.SOFTWARE 7 .. הקצאת אוגרים גלובלית 8 . טכניקות לנצול זכרון מטמון מסוג
+INSTRUCTION ו-.DATA 9 . שיטות DISAMBIGUATION .MEMORY
