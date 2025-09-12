@@ -78,7 +78,7 @@ rag = MiniRAG(
 )
 
 
-# Now indexing
+# Find and list all .txt files in a directory and its subdirectories
 def find_txt_files(root_path):
     txt_files = []
     for root, dirs, files in os.walk(root_path):
