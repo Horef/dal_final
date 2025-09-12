@@ -40,7 +40,7 @@ args = get_args()
 
 
 if args.model == "PHI":
-    LLM_MODEL = "microsoft/Phi-3.5-mini-instruct"
+    LLM_MODEL = "microsoft/Phi-2"
 elif args.model == "aya":
     LLM_MODEL = "CohereLabs/aya-23-8B"
 elif args.model == "GLM":
