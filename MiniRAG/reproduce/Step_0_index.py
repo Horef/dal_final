@@ -144,7 +144,6 @@ async def hf_model_complete(prompt: str, **kwargs) -> str:
         top_p=0.9,
         pad_token_id=_hf_tokenizer.pad_token_id,
         eos_token_id=_hf_tokenizer.eos_token_id,
-        truncation=False,  # let MiniRAG control prompt sizing if needed
     )
     text = gen[0]["generated_text"]
     # Strip the prompt prefix if the pipeline returns prompt+completion
