@@ -62,7 +62,7 @@ args = get_args()
 
 # Map CLI choice to HF model names (you can swap to any compatible instruct model)
 if args.model == "PHI":
-    HF_LLM = "microsoft/Phi-3.5-mini-instruct"
+    HF_LLM = "microsoft/Phi-2"
 elif args.model == "aya":
     HF_LLM = "CohereLabs/aya-23-8B"
 elif args.model == "GLM":
