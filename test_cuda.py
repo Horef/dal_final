@@ -43,3 +43,6 @@ except OSError as e:
 print("torch says is_available:", torch.cuda.is_available())
 print("torch device_count:", torch.cuda.device_count())
 
+
+print('--------------------------------------------------')
+
