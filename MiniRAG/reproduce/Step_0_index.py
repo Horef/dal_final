@@ -46,7 +46,7 @@ from minirag.utils import EmbeddingFunc
 # Configuration & CLI parsing
 # ----------------------------
 
-EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 
 def get_args():
     parser = argparse.ArgumentParser(description="MiniRAG (HF-only)")
