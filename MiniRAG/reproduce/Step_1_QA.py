@@ -18,7 +18,7 @@ from minirag.llm import (
 from minirag.utils import EmbeddingFunc
 from transformers import AutoModel, AutoTokenizer
 
-EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 
 import argparse
 
