@@ -25,7 +25,7 @@ import argparse
 
 def get_args():
     parser = argparse.ArgumentParser(description="MiniRAG")
-    parser.add_argument("--model", type=str, default="PHI")
+    parser.add_argument("--model", type=str, default="bloomz")
     parser.add_argument("--outputpath", type=str, default="./logs/Default_output.csv")
     parser.add_argument("--workingdir", type=str, default="./LiHua-World")
     parser.add_argument("--datapath", type=str, default="./dataset/LiHua-World/data/")
@@ -39,7 +39,7 @@ def get_args():
 args = get_args()
 
 
-if args.model == "PHI":
+if args.model == "bloomz":
     LLM_MODEL = "bigscience/bloomz-560m"
 elif args.model == "aya":
     LLM_MODEL = "bigscience/bloom-1b1"
