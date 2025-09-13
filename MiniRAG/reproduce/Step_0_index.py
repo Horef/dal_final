@@ -213,6 +213,8 @@ def main():
                 # saving the checkpoint using pickle
                 with open(os.path.join(WORKING_DIR, f'checkpoints/rag_ch_{ch_id}.pkl'), 'wb') as f:
                     pickle.dump(rag, f)
+                with open(os.path.join(WORKING_DIR, 'checkpoints/rag_final.pkl'), 'wb') as f:
+                    pickle.dump(rag, f)
                 print(f"--- Checkpoint #{ch_id} saved ---")
 
         with open(chunk_path, "r", encoding="utf-8", errors="ignore") as f:
