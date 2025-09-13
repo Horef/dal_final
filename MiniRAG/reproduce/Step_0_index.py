@@ -5,11 +5,11 @@
 Step_0_index.py  —  MiniRAG indexer (HF-only, no OpenAI)
 
 - Runs from the REPO ROOT:  python reproduce/Step_0_index.py [--args...]
-- Uses local Hugging Face LLMs for completion (Phi-3.5-mini-instruct, Qwen2.5-3B, MiniCPM3-4B, GLM Edge 1.5B, Aya-23-8B)
+- Uses local Hugging Face LLMs for completion (bloomz-3.5-mini-instruct, Qwen2.5-3B, MiniCPM3-4B, GLM Edge 1.5B, Aya-23-8B)
 - Uses sentence-transformers/all-MiniLM-L6-v2 for embeddings (384-dim)
 
 Args:
-  --model        One of: PHI | aya | GLM | MiniCPM | qwen   (default: PHI)
+  --model        One of: bloomz | aya | GLM | MiniCPM | qwen   (default: bloomz)
   --outputpath   CSV to write logs (unused here but kept for compatibility)
   --workingdir   Vector DB and caches directory (default: ./LiHua-World)
   --datapath     Root folder to recursively index .txt files
@@ -50,8 +50,8 @@ EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 
 def get_args():
     parser = argparse.ArgumentParser(description="MiniRAG (HF-only)")
-    parser.add_argument("--model", type=str, default="PHI",
-                        help="PHI | aya | GLM | MiniCPM | qwen")
+    parser.add_argument("--model", type=str, default="bloomz",
+                        help="bloomz | aya | GLM | MiniCPM | qwen")
     parser.add_argument("--outputpath", type=str, default="./logs/Default_output.csv")
     parser.add_argument("--workingdir", type=str, default="./LiHua-World")
     parser.add_argument("--datapath", type=str, default="./dataset/LiHua-World/data/")
@@ -66,18 +66,18 @@ def get_args():
 args = get_args()
 
 # Map CLI choice to HF model names (you can swap to any compatible instruct model)
-if args.model == "PHI":
+if args.model == "bloomz":
     HF_LLM = "bigscience/bloomz-560m"          # instruction-tuned, multilingual (incl. Hebrew)
 elif args.model == "aya":
     HF_LLM = "bigscience/bloom-1b1"            # slightly larger, still fine on 8GB
 elif args.model == "GLM":
-    HF_LLM = "THUDM/glm-edge-1.5b-chat"        # may fit; if OOM, switch to PHI option above
+    HF_LLM = "THUDM/glm-edge-1.5b-chat"        # may fit; if OOM, switch to bloomz option above
 elif args.model == "MiniCPM":
-    HF_LLM = "openbmb/MiniCPM3-4B"             # might OOM on 8GB; prefer PHI/aya
+    HF_LLM = "openbmb/MiniCPM3-4B"             # might OOM on 8GB; prefer bloomz/aya
 elif args.model == "qwen":
     HF_LLM = "Qwen/Qwen2.5-3B-Instruct"        # multilingual; may OOM on 8GB
 else:
-    print("Invalid model name. Use: PHI | aya | GLM | MiniCPM | qwen")
+    print("Invalid model name. Use: bloomz | aya | GLM | MiniCPM | qwen")
     sys.exit(1)
 
 WORKING_DIR = args.workingdir
