@@ -44,8 +44,39 @@ st.set_page_config(
     layout="centered"
 )
 
+# --- Custom CSS for RTL and Hebrew Font ---
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;700&display=swap');
+
+body, html, .stApp, .stTextInput, .stButton, .stMarkdown, .stSpinner, .stSuccess {
+    direction: rtl;
+    text-align: right;
+    font-family: 'Heebo', sans-serif;
+}
+
+/* Fix for text input placeholder */
+.stTextInput input::placeholder {
+    text-align: right;
+}
+
+/* Fix for spinner alignment */
+.stSpinner > div {
+    justify-content: flex-end;
+}
+</style>
+""", unsafe_allow_html=True)
+
 # --- App Content ---
-st.title("🎓 Uni-Assistant")
+# Create columns for the header
+col1, col2 = st.columns([1, 4])  # Create a 1:4 ratio for columns
+
+with col1:
+    st.image("chat_interface/technion_logo.png", width=100) # Display logo in the smaller column
+
+with col2:
+    st.title("🎓 Uni-Assistant") # Display title in the larger column
+
 st.write("אפשר לשאול כל שאלה על קורסי הטכניון, דרישות קדם ותכנים.")
 
 # Get user input

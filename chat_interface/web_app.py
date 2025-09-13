@@ -45,33 +45,64 @@ st.set_page_config(
     layout="centered"
 )
 
+# --- Custom CSS for RTL and Hebrew Font ---
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;700&display=swap');
+
+body, html, .stApp, .stTextInput, .stButton, .stMarkdown, .stSpinner, .stSuccess {
+    direction: rtl;
+    text-align: right;
+    font-family: 'Heebo', sans-serif;
+}
+
+/* Fix for text input placeholder */
+.stTextInput input::placeholder {
+    text-align: right;
+}
+
+/* Fix for spinner alignment */
+.stSpinner > div {
+    justify-content: flex-end;
+}
+</style>
+""", unsafe_allow_html=True)
+
 # --- App Content ---
-st.title("🎓 Uni-Assistant")
-st.write("Ask any question about the Technion's courses, prerequisites, and content.")
+# Create columns for the header
+col1, col2 = st.columns([1, 4])  # Create a 1:4 ratio for columns
+
+with col1:
+    st.image("chat_interface/technion_logo.png", width=100) # Display logo in the smaller column
+
+with col2:
+    st.title("🎓 Uni-Assistant") # Display title in the larger column
+
+st.write("שאלו כל שאלה על הקורסים, דרישות הקדם והתכנים באוניברסיטה.")
 
 # Load the RAG system
 rag_system = load_rag_system()
 
 # Get user input
 question = st.text_input(
-    "Ask your question here:",
-    placeholder="e.g., What are the prerequisites for Advanced Calculus?"
+    "הקלידו את שאלתכם כאן:",
+    placeholder="לדוגמה: מהן דרישות הקדם לקורס חדו\"א 2?"
 )
 
 # Handle the question
 if question:
-    with st.spinner("Searching the curriculum..."):
+    with st.spinner("מחפש בתכנית הלימודים..."):
         # Get the answer from your RAG system
         try:
             answer = (rag_system.query(question, param=QueryParam(mode="mini"))
                         .replace("\n", "")
                         .replace("\r", ""))
         except Exception as e:
-            st.error(f"An error occurred while querying the RAG system: {e}")
+            st.error(f"נראה שקרתה שגיאה: {e}")
             st.stop()
 
         # Display the answer
-        st.success("Here's what I found:")
+        st.success("הנה מה שמצאתי:")
         st.write(answer)
 
         # Optionally, display the sources used
