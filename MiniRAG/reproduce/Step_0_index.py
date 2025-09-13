@@ -53,9 +53,9 @@ def get_args():
     parser.add_argument("--model", type=str, default="bloomz",
                         help="bloomz | aya | GLM | MiniCPM | qwen")
     parser.add_argument("--outputpath", type=str, default="./logs/Default_output.csv")
-    parser.add_argument("--workingdir", type=str, default="./LiHua-World")
-    parser.add_argument("--datapath", type=str, default="./dataset/LiHua-World/data/")
-    parser.add_argument("--querypath", type=str, default="./dataset/LiHua-World/qa/query_set.csv")
+    parser.add_argument("--workingdir", type=str, default="./Technion")
+    parser.add_argument("--datapath", type=str, default="./dataset/Technion/data/")
+    parser.add_argument("--querypath", type=str, default="./dataset/Technion/qa/query_set.csv")
     parser.add_argument("--checkpoints", type=int, default=10, 
                         help="Number of checkpoints to save during indexing (default: 10)")
     parser.add_argument("--save", type=int, default=1, 
@@ -175,11 +175,11 @@ async def hf_model_complete(prompt: str, **kwargs) -> str:
 
 rag = MiniRAG(
     working_dir=WORKING_DIR,
-    llm_model_func=hf_model_complete,   # ← uses local HF model, no OpenAI
+    llm_model_func=hf_model_complete,
     llm_model_max_token_size=200,
     llm_model_name=HF_LLM,
     embedding_func=EmbeddingFunc(
-        embedding_dim=384,              # all-MiniLM-L6-v2 = 384
+        embedding_dim=384,
         max_token_size=1000,
         func=lambda texts: hf_embed(
             texts,
