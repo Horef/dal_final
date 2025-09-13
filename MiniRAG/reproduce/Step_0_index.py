@@ -24,6 +24,7 @@ import sys
 import argparse
 import asyncio
 from typing import List
+import pickle
 
 # Ensure repo root is on PYTHONPATH when running from root with `python reproduce/...`
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -55,6 +56,10 @@ def get_args():
     parser.add_argument("--workingdir", type=str, default="./LiHua-World")
     parser.add_argument("--datapath", type=str, default="./dataset/LiHua-World/data/")
     parser.add_argument("--querypath", type=str, default="./dataset/LiHua-World/qa/query_set.csv")
+    parser.add_argument("--checkpoints", type=int, default=10, 
+                        help="Number of checkpoints to save during indexing (default: 10)")
+    parser.add_argument("--save", type=int, default=1, 
+                        help="Whether to save the index after processing (1 = yes, 0 = no; default: 1)")
     return parser.parse_args()
 
 
@@ -191,6 +196,8 @@ def find_txt_files(root_path: str) -> List[str]:
 # ----------------------------
 
 def main():
+    ch_id = 0
+
     chunks = find_txt_files(DATA_PATH)
     total = len(chunks)
     if total == 0:
@@ -199,9 +206,23 @@ def main():
 
     for idx, chunk_path in enumerate(chunks, start=1):
         print(f"{idx}/{total}  {chunk_path}")
+        if args.checkpoints > 1 and (idx % (total // args.checkpoints) == 0 or idx == total):
+            ch_id += 1
+            if args.save:
+                print(f"--- Saving index checkpoint #{ch_id} ---")
+                # saving the checkpoint using pickle
+                with open(os.path.join(WORKING_DIR, f'checkpoints/rag_ch_{ch_id}.pkl'), 'wb') as f:
+                    pickle.dump(rag, f)
+                print(f"--- Checkpoint #{ch_id} saved ---")
+
         with open(chunk_path, "r", encoding="utf-8", errors="ignore") as f:
             rag.insert(f.read())
 
+    if args.save:
+        print("--- Saving final index ---")
+        with open(os.path.join(WORKING_DIR, 'checkpoints/rag_final.pkl'), 'wb') as f:
+            pickle.dump(rag, f)
+        print("--- Final index saved ---")
     print("INFO: Document processing pipeline completed")
     print("INFO: If entity extraction is enabled in MiniRAG, it will run automatically.")
 
