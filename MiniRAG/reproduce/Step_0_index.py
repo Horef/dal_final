@@ -155,7 +155,7 @@ async def hf_model_complete(prompt: str, **kwargs) -> str:
     """
     gen = _hf_pipe(
         prompt,
-        max_new_tokens=128,
+        max_new_tokens=64,
         do_sample=True,
         temperature=0.2,
         top_p=0.9,
