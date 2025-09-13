@@ -25,3 +25,21 @@ else:
 
 print("device_arg =", device_arg)
 
+
+import os, torch, ctypes, sys
+print('--------------------------------------------------')
+print("python:", sys.executable)
+print("torch:", torch.__version__, "cuda build:", torch.version.cuda)
+print("LD_LIBRARY_PATH:", os.environ.get("LD_LIBRARY_PATH"))
+
+# Try loading the NVIDIA driver and initializing CUDA
+try:
+    lib = ctypes.CDLL("libcuda.so.1")
+    err = lib.cuInit(0)   # 0 = CUDA_SUCCESS
+    print("cuInit err code:", err)
+except OSError as e:
+    print("CDLL load error:", e)
+
+print("torch says is_available:", torch.cuda.is_available())
+print("torch device_count:", torch.cuda.device_count())
+
