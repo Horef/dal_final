@@ -41,8 +41,8 @@ args = get_args()
 
 if args.model == "bloomz":
     LLM_MODEL = "bigscience/bloomz-560m"
-elif args.model == "aleph_gpt":
-    HF_LLM = "onlplab/aleph-gpt-base"
+elif args.model == "dictalm":
+    HF_LLM = "dicta-il/dictalm2.0"
 elif args.model == "neo":
     HF_LLM = "Norod78/hebrew-gpt_neo-small"
 elif args.model == "bloom1":

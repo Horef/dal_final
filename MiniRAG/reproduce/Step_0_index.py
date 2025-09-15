@@ -70,8 +70,8 @@ args = get_args()
 # Map CLI choice to HF model names (you can swap to any compatible instruct model)
 if args.model == "bloomz":
     HF_LLM = "bigscience/bloomz-560m"          # instruction-tuned, multilingual
-elif args.model == "aleph_gpt":
-    HF_LLM = "onlplab/aleph-gpt-base"
+elif args.model == "dictalm":
+    HF_LLM = "dicta-il/dictalm2.0"
 
 elif args.model == "neo":
     HF_LLM = "Norod78/hebrew-gpt_neo-small"
