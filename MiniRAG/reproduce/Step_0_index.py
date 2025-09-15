@@ -110,8 +110,8 @@ _hf_tokenizer = AutoTokenizer.from_pretrained(
     padding_side = "left"
 )
 
-_dtype = torch.float32
-#_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+#_dtype = torch.float32
+_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
 _hf_model = AutoModelForCausalLM.from_pretrained(
     HF_LLM,
     torch_dtype=_dtype,
