@@ -43,6 +43,62 @@ _LISTISH_RE = re.compile(
     re.VERBOSE,
 )
 
+
+_SENT_SPLIT_RE = re.compile(r"(?<=[\.!?…]|[.:;״”])\s+")
+
+def _split_paragraph(s: str, soft: int, hard: int):
+    """
+    Split a long paragraph into subparts aiming for 'soft' chars,
+    never exceeding 'hard'. Hebrew-friendly punctuation split,
+    fallback to word-split for long sentences.
+    """
+    s = s.strip()
+    if len(s) <= hard:
+        return [s]
+
+    parts = _SENT_SPLIT_RE.split(s)  # rough sentence-ish split (works for He)
+    out, buf, blen = [], [], 0
+
+    def flush_buf():
+        nonlocal out, buf, blen
+        if buf:
+            out.append(" ".join(buf).strip())
+            buf, blen = [], 0
+
+    for seg in parts:
+        seg = seg.strip()
+        if not seg:
+            continue
+        # if a single segment is itself huge, split by words
+        if len(seg) > hard:
+            words, wbuf, wlen = seg.split(), [], 0
+            for w in words:
+                if (wlen + (1 if wlen else 0) + len(w)) > soft:
+                    out.append(" ".join(wbuf).strip())
+                    wbuf, wlen = [], 0
+                wbuf.append(w)
+                wlen += (1 if wlen else 0) + len(w)
+            if wbuf:
+                out.append(" ".join(wbuf).strip())
+            continue
+
+        if (blen + (1 if blen else 0) + len(seg)) > soft:
+            flush_buf()
+        buf.append(seg)
+        blen += (1 if blen else 0) + len(seg)
+
+    flush_buf()
+
+    # merge tiny tail fragments into previous if room
+    merged = []
+    for p in out:
+        if merged and len(p) < 80 and len(merged[-1]) + 1 + len(p) <= hard:
+            merged[-1] = merged[-1] + " " + p
+        else:
+            merged.append(p)
+    return merged
+
+
 # Headings: numbers or annexes
 _NUMBERED_HEADING_RE = re.compile(r"^\s*\d+(?:\.\d+){0,4}\s+\S")
 _ANNEX_HEADING_RE = re.compile(r"^\s*נספח\s+[א-ת][׳\"']?\s*[:\-]?\s+\S")
@@ -169,16 +225,36 @@ def _chunkize_blocks(blocks: List[Block], target_chars=1200, overlap_chars=150, 
         if cur_heading is None: cur_heading = b.heading or "כללי"
         if cur_page_start is None: cur_page_start = b.page_start
         cur_page_end = b.page_end
+
         if b.kind == "table" and keep_table_as_whole:
             if cur_len()+len(b.text)+1 > max_chars: flush(True)
-            buf.append(b.text);
+            buf.append(b.text)
             if cur_len() >= target_chars or len(b.text) >= target_chars//2: flush(True)
             continue
-        buf.append(b.text)
-        if cur_len() >= target_chars: flush()
-        if cur_len() > max_chars: flush(True)
+
+        if b.kind == "table" and not keep_table_as_whole:
+            # split tables row-wise so they respect size limits
+            rows = [r for r in b.text.splitlines() if r.strip()]
+            for row in rows:
+                if cur_len() + len(row) + 1 > max_chars:
+                    flush(True)
+                buf.append(row)
+                if cur_len() >= target_chars:
+                    flush()
+            continue
+
+        # NON-TABLE: split overlong paragraphs before appending
+        for sub in _split_paragraph(b.text, soft=target_chars, hard=max_chars):
+            if cur_len() + len(sub) + 1 > max_chars:
+                flush(True)
+            buf.append(sub)
+            if cur_len() >= target_chars:
+                flush()
+
     flush(True)
     return chunks
+
+
 
 # --- Public API ---
 
