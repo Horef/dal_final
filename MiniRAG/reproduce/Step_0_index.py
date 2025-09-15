@@ -101,8 +101,8 @@ os.makedirs(WORKING_DIR, exist_ok=True)
 
 _hf_tokenizer = AutoTokenizer.from_pretrained(
     HF_LLM,
-    use_fast=False,          # avoid fast-tokenizer edge cases
-    trust_remote_code=False, # Neo doesn't need custom code
+    use_fast=False,
+    trust_remote_code=True,
     padding_side = "left"
 )
 
