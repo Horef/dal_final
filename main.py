@@ -2,6 +2,8 @@
 import os
 from text_from_pdf import extract_text_from_pdf
 from data_splitter import build_chunks_from_txt, write_chunks_jsonl, write_chunks_txt
+import shutil
+
 
 if __name__ == "__main__":
     raw_data_path = 'Unprocessed Data'
@@ -13,12 +15,16 @@ if __name__ == "__main__":
     print(f"Found {len(pdf_files)} PDF files in '{raw_data_path}'.")
 
     # Cleaning the dataset directory
+    # if os.path.exists(dataset_path):
+    #     for root, dirs, files in os.walk(dataset_path):
+    #         for file in files:
+    #             os.remove(os.path.join(root, file))
+    #         for dir in dirs:
+    #             os.rmdir(os.path.join(root, dir))
+
     if os.path.exists(dataset_path):
-        for root, dirs, files in os.walk(dataset_path):
-            for file in files:
-                os.remove(os.path.join(root, file))
-            for dir in dirs:
-                os.rmdir(os.path.join(root, dir))
+        shutil.rmtree(dataset_path)
+    os.makedirs(dataset_path, exist_ok=True)
 
     print("Extracting text from PDF files...")
     for pdf_file in pdf_files:
@@ -36,10 +42,10 @@ if __name__ == "__main__":
             # build chunks for miniRAG
             chunks = build_chunks_from_txt(
                 text,
-                target_chars=1200,
-                overlap_chars=150,
-                min_chars=200,
-                max_chars=2200,
+                target_chars=250,
+                overlap_chars=80,
+                min_chars=120,
+                max_chars=500,
                 keep_table_as_whole=True,
             )
             jsonl_out = os.path.join(processed_data_path, f"{base}.chunks.jsonl")
