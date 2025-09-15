@@ -99,49 +99,37 @@ os.makedirs(WORKING_DIR, exist_ok=True)
 # Build a single HF text-gen pipeline (loads once)
 # ----------------------------
 
-# _device_map = "auto"
-# _dtype = torch.bfloat16 if torch.cuda.is_available() else torch.float32
 
-# _dtype = torch.float16
-#
-# # Some small models lack pad/eos; we set sane fallbacks after loading tokenizer
-# _hf_tokenizer = AutoTokenizer.from_pretrained(HF_LLM, trust_remote_code=True)
-# _hf_model = AutoModelForCausalLM.from_pretrained(
-#     HF_LLM,
-#     torch_dtype=_dtype,
-#     low_cpu_mem_usage=False,        # safer with older torch
-#     trust_remote_code=False,
-# )
-#
-#
+_hf_tokenizer = AutoTokenizer.from_pretrained(
+    HF_LLM,
+    use_fast=False,          # avoid fast-tokenizer edge cases
+    trust_remote_code=False, # Neo doesn't need custom code
+)
 
-
-_hf_tokenizer = AutoTokenizer.from_pretrained(HF_LLM, trust_remote_code=False)
+_hf_tokenizer.padding_side = "left"
 
 _dtype = torch.float16 if torch.cuda.is_available() else torch.float32
-try:
-    _hf_model = AutoModelForCausalLM.from_pretrained(
-        HF_LLM,
-        torch_dtype=_dtype,
-        low_cpu_mem_usage=True,
-        trust_remote_code=False,
-    )
-except Exception:
-    _hf_model = AutoModelForCausalLM.from_pretrained(
-        HF_LLM,
-        torch_dtype=torch.float32,
-        low_cpu_mem_usage=True,
-        trust_remote_code=False,
-    )
+_hf_model = AutoModelForCausalLM.from_pretrained(
+    HF_LLM,
+    torch_dtype=_dtype,
+    low_cpu_mem_usage=True,
+)
+
 _hf_model.eval()
-# # Fallback ids
+
 if _hf_tokenizer.pad_token_id is None:
     if _hf_tokenizer.eos_token_id is not None:
+        # reuse EOS as PAD (no vocab change → no resize needed)
         _hf_tokenizer.pad_token = _hf_tokenizer.eos_token
     else:
+        # fallback only if model truly lacks EOS (rare); adding new token requires resize
         _hf_tokenizer.add_special_tokens({"pad_token": "[PAD]"})
-        _hf_model.resize_token_embeddings(len(_hf_tokenizer))
+        need_resize = True
+else:
+    need_resize = False
 
+if 'need_resize' in locals() and need_resize:
+    _hf_model.resize_token_embeddings(len(_hf_tokenizer))
 
 # Manual device placement (M60: CC 5.2; torch 1.13.1 works)
 device_arg = -1
