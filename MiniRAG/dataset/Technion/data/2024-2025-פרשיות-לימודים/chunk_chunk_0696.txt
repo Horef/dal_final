@@ -1,4 +1,0 @@
-ית : שיטות ANALYSIS
-COMPONENTS PRINCIPLE ושיטות CLUSTERING , פיענוח תמונה
-באמצעות מערכות עצביות מלאכותיות , מערכות מומחה כולל LOGIC ,FUZZY
-כריית ידע .
