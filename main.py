@@ -42,10 +42,10 @@ if __name__ == "__main__":
             # build chunks for miniRAG
             chunks = build_chunks_from_txt(
                 text,
-                target_chars=250,
-                overlap_chars=80,
-                min_chars=120,
-                max_chars=500,
+                target_chars=150,
+                overlap_chars=50,
+                min_chars=50,
+                max_chars=300,
                 keep_table_as_whole=True,
             )
             jsonl_out = os.path.join(processed_data_path, f"{base}.chunks.jsonl")

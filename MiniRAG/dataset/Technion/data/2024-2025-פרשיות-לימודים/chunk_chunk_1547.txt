@@ -1,4 +1,0 @@
-יטות שונות TECHNIQUE(
-COSINE RAISED :, הפרעה בין סמבולית , אקווליזציה לינארית , שיטת אפנון
-QPSK MSK,BPSK, SQPSK, MFSK, BFSK, QAM, MPSK, . תוצאות מתורת
-CODED .

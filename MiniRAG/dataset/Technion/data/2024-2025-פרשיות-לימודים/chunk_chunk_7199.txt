@@ -1,6 +1,0 @@
-ת של שפות תכנות . הנושאים יכללו : תחשיב
-למבדא , טיפוסים , פולימורפיזם , THEORY TYPE , הצרנת סמנטיקה בלוגיקה
-מסדר ראשון , THEORY MODULO .SATISFIABILITY
-SYNTHESIS SYNTAX-GUIDED ,, תכנות על פי דוגמאות SYNTHESIS
-DEDUCTIVE AND TYPE-DIRECTED SYNTHESIS,. INDUCTIVE
-COUNTEREXAMPLE-GUIDED תוצאות למידה : בסיום הקורס ,

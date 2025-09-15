@@ -1,3 +1,0 @@
-ם PICOSECOND( .) בעזרת לייזרי הזרקה 1 . שיטות יצור
-הבזקי אור קצרים SWITCHIING( )GAIN PICOSECOND ו--LOCKING
-.MODE 2 . אפיון ומדידה של הבזקי אור קצרים .
