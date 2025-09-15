@@ -104,11 +104,11 @@ _hf_tokenizer = AutoTokenizer.from_pretrained(
     HF_LLM,
     use_fast=False,          # avoid fast-tokenizer edge cases
     trust_remote_code=False, # Neo doesn't need custom code
+    padding_side = "left"
 )
 
-_hf_tokenizer.padding_side = "left"
-
-_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+_dtype = torch.float32
+#_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
 _hf_model = AutoModelForCausalLM.from_pretrained(
     HF_LLM,
     torch_dtype=_dtype,
@@ -119,17 +119,12 @@ _hf_model.eval()
 
 if _hf_tokenizer.pad_token_id is None:
     if _hf_tokenizer.eos_token_id is not None:
-        # reuse EOS as PAD (no vocab change → no resize needed)
         _hf_tokenizer.pad_token = _hf_tokenizer.eos_token
     else:
-        # fallback only if model truly lacks EOS (rare); adding new token requires resize
         _hf_tokenizer.add_special_tokens({"pad_token": "[PAD]"})
-        need_resize = True
-else:
-    need_resize = False
+        _hf_model.resize_token_embeddings(len(_hf_tokenizer))
 
-if 'need_resize' in locals() and need_resize:
-    _hf_model.resize_token_embeddings(len(_hf_tokenizer))
+
 
 # Manual device placement (M60: CC 5.2; torch 1.13.1 works)
 device_arg = -1
@@ -159,28 +154,45 @@ _hf_pipe = pipeline(
     model=_hf_model,
     tokenizer=_hf_tokenizer,
     device=device_arg,
+    return_full_text=False,
 )
 
-
+_HF_GEN_SEM = asyncio.Semaphore(1)
+# --- async wrapper, now serialized + small hygiene ---
 async def hf_model_complete(prompt: str, **kwargs) -> str:
-    """
-    Async wrapper compatible with MiniRAG's awaited LLM interface.
-    Generates short, deterministic-ish completions for indexing/entity tasks.
-    """
-    gen = _hf_pipe(
-        prompt,
-        max_new_tokens=64,
-        do_sample=True,
-        temperature=0.2,
-        top_p=0.9,
-        pad_token_id=_hf_tokenizer.pad_token_id,
-        eos_token_id=_hf_tokenizer.eos_token_id,
-    )
-    text = gen[0]["generated_text"]
-    # Strip the prompt prefix if the pipeline returns prompt+completion
-    if text.startswith(prompt):
-        text = text[len(prompt):]
-    return text.strip()
+    async with _HF_GEN_SEM:   # serialize GPU calls
+        gen = _hf_pipe(
+            prompt,
+            max_new_tokens=64,
+            do_sample=True,
+            temperature=0.2,
+            top_p=0.9,
+            pad_token_id=_hf_tokenizer.pad_token_id,
+            eos_token_id=_hf_tokenizer.eos_token_id,
+        )
+        # return_full_text=False means this is just the completion
+        text = gen[0]["generated_text"]
+        return text.strip()
+
+# async def hf_model_complete(prompt: str, **kwargs) -> str:
+#     """
+#     Async wrapper compatible with MiniRAG's awaited LLM interface.
+#     Generates short, deterministic-ish completions for indexing/entity tasks.
+#     """
+#     gen = _hf_pipe(
+#         prompt,
+#         max_new_tokens=64,
+#         do_sample=True,
+#         temperature=0.2,
+#         top_p=0.9,
+#         pad_token_id=_hf_tokenizer.pad_token_id,
+#         eos_token_id=_hf_tokenizer.eos_token_id,
+#     )
+#     text = gen[0]["generated_text"]
+#     # Strip the prompt prefix if the pipeline returns prompt+completion
+#     if text.startswith(prompt):
+#         text = text[len(prompt):]
+#     return text.strip()
 
 
 # ----------------------------
