@@ -112,6 +112,7 @@ _hf_model = AutoModelForCausalLM.from_pretrained(
     HF_LLM,
     torch_dtype=_dtype,
     low_cpu_mem_usage=True,
+    trust_remote_code=True,
 )
 
 _hf_model.eval()
