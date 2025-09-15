@@ -92,7 +92,7 @@ with open(QUERY_PATH, mode="r", encoding="utf-8") as question_file:
 
 
 def run_experiment(output_path):
-    headers = ["Question", "Gold Answer", "minirag", "naive"]
+    headers = ["Question", "Gold Answer", "minirag_context", "minirag", "naive_context", "naive"]
 
     q_already = []
     if os.path.exists(output_path):
@@ -117,6 +117,11 @@ def run_experiment(output_path):
             print("Gold_Answer", Gold_Answer)
 
             try:
+                minirag_context = (
+                    rag.query(QUESTION, param=QueryParam(mode='mini', only_need_context=True))
+                    .replace("\n", "")
+                    .replace("\r", "")
+                )
                 minirag_answer = (
                     rag.query(QUESTION, param=QueryParam(mode="mini"))
                     .replace("\n", "")
@@ -127,6 +132,11 @@ def run_experiment(output_path):
                 minirag_answer = "Error"
 
             try:
+                naive_context = (
+                    rag.query(QUESTION, param=QueryParam(mode='naive', only_need_context=True))
+                    .replace("\n", "")
+                    .replace("\r", "")
+                )
                 naive_answer = (
                     rag.query(QUESTION, param=QueryParam(mode="naive"))
                     .replace("\n", "")
@@ -136,7 +146,7 @@ def run_experiment(output_path):
                 print("Error in naive_answer", e)
                 naive_answer = "Error"
 
-            writer.writerow([QUESTION, Gold_Answer, minirag_answer, naive_answer])
+            writer.writerow([QUESTION, Gold_Answer, minirag_context, minirag_answer, naive_context, naive_answer])
 
     print(f"Experiment data has been recorded in the file: {output_path}")
 
