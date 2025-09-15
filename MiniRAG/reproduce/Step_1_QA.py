@@ -50,7 +50,7 @@ elif args.model == "GLM":
 elif args.model == "MiniCPM":
     LLM_MODEL = "openbmb/MiniCPM3-4B"
 elif args.model == "qwen":
-    LLM_MODEL = "Qwen/Qwen2.5-3B-Instruct"
+    LLM_MODEL = "Qwen/Qwen2.5-0.5B-Instruct"
 else:
     print("Invalid model name")
     exit(1)

@@ -69,10 +69,9 @@ args = get_args()
 
 # Map CLI choice to HF model names (you can swap to any compatible instruct model)
 if args.model == "bloomz":
-    HF_LLM = "bigscience/bloomz-560m"          # instruction-tuned, multilingual (incl. Hebrew)
+    HF_LLM = "bigscience/bloomz-560m"          # instruction-tuned, multilingual
 elif args.model == "neo":
     HF_LLM = "Norod78/hebrew-gpt_neo-small"
-
 elif args.model == "bloom1":
     HF_LLM = "bigscience/bloom-1b1"            # slightly larger, still fine on 8GB
 elif args.model == "GLM":
@@ -80,7 +79,7 @@ elif args.model == "GLM":
 elif args.model == "MiniCPM":
     HF_LLM = "openbmb/MiniCPM3-4B"             # might OOM on 8GB
 elif args.model == "qwen":
-    HF_LLM = "Qwen/Qwen2.5-3B-Instruct"        # multilingual; may OOM on 8GB
+    HF_LLM = "Qwen/Qwen2.5-0.5B-Instruct"        # multilingual; may OOM on 8GB
 else:
     print("Invalid model name. Use: bloomz | aya | GLM | MiniCPM | qwen")
     sys.exit(1)
