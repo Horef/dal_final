@@ -20,5 +20,6 @@ TODO:
 - [x] Start working on the Interface
   - chatbot - input text box, output text box. Not a dialogue, one shot questions.
   - [x] created a basic chat interface in a corresponding folder
-- [ ] Start looking through RAGAS
+- [x] Start looking through RAGAS
+  - [x] Finished building a basic script.
 
