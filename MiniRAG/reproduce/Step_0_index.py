@@ -26,8 +26,6 @@ import asyncio
 from typing import List
 import pickle
 
-from transformers import AwqConfig
-
 # Ensure repo root is on PYTHONPATH when running from root with `python reproduce/...`
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -74,7 +72,7 @@ if args.model == "bloomz":
     HF_LLM = "bigscience/bloomz-560m"          # instruction-tuned, multilingual
 
 elif args.model == "dictalm":
-    HF_LLM = "dicta-il/dictalm2.0-AWQ"
+    HF_LLM = "dicta-il/dictalm2.0-AWQ-4bit"
 
 elif args.model == "neo":
     HF_LLM = "Norod78/hebrew-gpt_neo-small"
@@ -112,60 +110,16 @@ _hf_tokenizer = AutoTokenizer.from_pretrained(
     padding_side = "left"
 )
 
-# _dtype = torch.float32
-# #_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
-# _hf_model = AutoModelForCausalLM.from_pretrained(
-#     HF_LLM,
-#     torch_dtype=_dtype,
-#     low_cpu_mem_usage=True,
-#     trust_remote_code=True,
-# )
-#
-# _hf_model.eval()
+_dtype = torch.float32
+#_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+_hf_model = AutoModelForCausalLM.from_pretrained(
+    HF_LLM,
+    torch_dtype=_dtype,
+    low_cpu_mem_usage=True,
+    trust_remote_code=True,
+)
 
-_use_cuda = torch.cuda.is_available()
-
-if "dictalm2.0-AWQ" in HF_LLM:
-    quant_cfg = AwqConfig(
-        bits=4,
-        fuse_max=True,        # common AWQ speed/accuracy setting
-        version="GEMM",       # GEMM kernels are broadly compatible
-    )
-    _hf_model = AutoModelForCausalLM.from_pretrained(
-        HF_LLM,
-        trust_remote_code=False,
-        low_cpu_mem_usage=True,
-        quantization_config=quant_cfg,
-        device_map="auto",
-        attn_implementation="eager",    # safest for older GPUs
-        max_memory={
-            "cuda:0": "7.2GiB",         # leave headroom for KV cache
-            "cpu":    f"{max(16, os.cpu_count()*2)}GiB",
-        },
-        offload_folder=os.path.join(WORKING_DIR, "offload_cache"),
-        offload_state_dict=True,
-    )
-    device_arg = 0 if _use_cuda else -1
-else:
-    # Fallback for other (non-AWQ) models
-    _llm_dtype = torch.float16 if _use_cuda else torch.float32
-    _hf_model = AutoModelForCausalLM.from_pretrained(
-        HF_LLM,
-        torch_dtype=_llm_dtype,
-        low_cpu_mem_usage=True,
-        trust_remote_code=False,
-    )
-    device_arg = 0 if _use_cuda else -1
-    if _use_cuda:
-        _hf_model.to("cuda:0")   # only for non-AWQ path
-
-# Ensure pad token exists
-if _hf_tokenizer.pad_token_id is None:
-    if _hf_tokenizer.eos_token_id is not None:
-        _hf_tokenizer.pad_token = _hf_tokenizer.eos_token
-    else:
-        _hf_tokenizer.add_special_tokens({"pad_token": "[PAD]"})
-        _hf_model.resize_token_embeddings(len(_hf_tokenizer))
+_hf_model.eval()
 
 if _hf_tokenizer.pad_token_id is None:
     if _hf_tokenizer.eos_token_id is not None:
@@ -205,7 +159,6 @@ _hf_pipe = pipeline(
     tokenizer=_hf_tokenizer,
     device=device_arg,
     return_full_text=False,
-    batch_size=1
 )
 
 _HF_GEN_SEM = asyncio.Semaphore(1)
