@@ -50,8 +50,8 @@ EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 
 def get_args():
     parser = argparse.ArgumentParser(description="MiniRAG (HF-only)")
-    parser.add_argument("--model", type=str, default="bloomz",
-                        help="bloomz | bloom1 | GLM | MiniCPM | qwen")
+    parser.add_argument("--model", type=str, default="neo",
+                        help="bloomz | neo | bloom1 | GLM | MiniCPM | qwen")
     parser.add_argument("--outputpath", type=str, default="./logs/Default_output.csv")
     parser.add_argument("--workingdir", type=str, default="./Technion")
     parser.add_argument("--datapath", type=str, default="./dataset/Technion/data/")
@@ -70,10 +70,12 @@ args = get_args()
 # Map CLI choice to HF model names (you can swap to any compatible instruct model)
 if args.model == "bloomz":
     HF_LLM = "bigscience/bloomz-560m"          # instruction-tuned, multilingual (incl. Hebrew)
+elif args.model == "neo":
+    HF_LLM = "EleutherAI/gpt-neo-1.3B"
 elif args.model == "bloom1":
     HF_LLM = "bigscience/bloom-1b1"            # slightly larger, still fine on 8GB
 elif args.model == "GLM":
-    HF_LLM = "THUDM/glm-edge-1.5b-chat"        # may fit; if OOM, switch to bloomz option above
+    HF_LLM = "THUDM/glm-edge-1.5b-chat"        # may fit
 elif args.model == "MiniCPM":
     HF_LLM = "openbmb/MiniCPM3-4B"             # might OOM on 8GB
 elif args.model == "qwen":
