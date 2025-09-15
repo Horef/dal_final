@@ -50,7 +50,7 @@ EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 
 def get_args():
     parser = argparse.ArgumentParser(description="MiniRAG (HF-only)")
-    parser.add_argument("--model", type=str, default="neo",
+    parser.add_argument("--model", type=str, default="bloomz",
                         help="bloomz | neo | bloom1 | GLM | MiniCPM | qwen")
     parser.add_argument("--outputpath", type=str, default="./logs/Default_output.csv")
     parser.add_argument("--workingdir", type=str, default="./Technion")
