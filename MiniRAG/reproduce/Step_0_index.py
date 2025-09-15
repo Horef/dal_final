@@ -111,13 +111,9 @@ os.makedirs(WORKING_DIR, exist_ok=True)
 # )
 #
 #
-# # Fallback ids
-# if _hf_tokenizer.pad_token_id is None:
-#     if _hf_tokenizer.eos_token_id is not None:
-#         _hf_tokenizer.pad_token = _hf_tokenizer.eos_token
-#     else:
-#         _hf_tokenizer.add_special_tokens({"pad_token": "[PAD]"})
-#         _hf_model.resize_token_embeddings(len(_hf_tokenizer))
+
+
+_hf_tokenizer = AutoTokenizer.from_pretrained(HF_LLM, trust_remote_code=False)
 
 _dtype = torch.float16 if torch.cuda.is_available() else torch.float32
 try:
@@ -135,6 +131,14 @@ except Exception:
         trust_remote_code=False,
     )
 _hf_model.eval()
+# # Fallback ids
+if _hf_tokenizer.pad_token_id is None:
+    if _hf_tokenizer.eos_token_id is not None:
+        _hf_tokenizer.pad_token = _hf_tokenizer.eos_token
+    else:
+        _hf_tokenizer.add_special_tokens({"pad_token": "[PAD]"})
+        _hf_model.resize_token_embeddings(len(_hf_tokenizer))
+
 
 # Manual device placement (M60: CC 5.2; torch 1.13.1 works)
 device_arg = -1
