@@ -42,7 +42,7 @@ args = get_args()
 if args.model == "bloomz":
     LLM_MODEL = "bigscience/bloomz-560m"
 elif args.model == "neo":
-    HF_LLM = "EleutherAI/gpt-neo-1.3B"
+    HF_LLM = "Norod78/hebrew-gpt_neo-small"
 elif args.model == "bloom1":
     LLM_MODEL = "bigscience/bloom-1b1"
 elif args.model == "GLM":

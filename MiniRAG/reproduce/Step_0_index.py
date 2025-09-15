@@ -71,7 +71,8 @@ args = get_args()
 if args.model == "bloomz":
     HF_LLM = "bigscience/bloomz-560m"          # instruction-tuned, multilingual (incl. Hebrew)
 elif args.model == "neo":
-    HF_LLM = "EleutherAI/gpt-neo-1.3B"
+    HF_LLM = "Norod78/hebrew-gpt_neo-small"
+
 elif args.model == "bloom1":
     HF_LLM = "bigscience/bloom-1b1"            # slightly larger, still fine on 8GB
 elif args.model == "GLM":
