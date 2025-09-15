@@ -99,7 +99,7 @@ os.makedirs(WORKING_DIR, exist_ok=True)
 # _device_map = "auto"
 # _dtype = torch.bfloat16 if torch.cuda.is_available() else torch.float32
 
-_dtype = torch.float32
+_dtype = torch.float16
 
 # Some small models lack pad/eos; we set sane fallbacks after loading tokenizer
 _hf_tokenizer = AutoTokenizer.from_pretrained(HF_LLM, trust_remote_code=True)
