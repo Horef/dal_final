@@ -84,7 +84,7 @@ else:
 
 WORKING_DIR = args.workingdir
 DATA_PATH   = args.datapath
-QUERY_PATH  = args.querypath  # kept for parity, not used below
+QUERY_PATH  = args.querypath
 OUTPUT_PATH = args.outputpath
 
 print("USING LLM:", HF_LLM)
@@ -175,6 +175,9 @@ async def hf_model_complete(prompt: str, **kwargs) -> str:
 # Build MiniRAG with HF-only stack
 # ----------------------------
 
+_EMB_TOKENIZER = AutoTokenizer.from_pretrained(EMBEDDING_MODEL)
+_EMB_MODEL = AutoModel.from_pretrained(EMBEDDING_MODEL).eval()
+
 rag = MiniRAG(
     working_dir=WORKING_DIR,
     llm_model_func=hf_model_complete,
@@ -185,8 +188,8 @@ rag = MiniRAG(
         max_token_size=1000,
         func=lambda texts: hf_embed(
             texts,
-            tokenizer=AutoTokenizer.from_pretrained(EMBEDDING_MODEL),
-            embed_model=AutoModel.from_pretrained(EMBEDDING_MODEL),
+            tokenizer=_EMB_TOKENIZER,
+            embed_model=_EMB_MODEL,
         ),
     ),
 )
