@@ -173,22 +173,92 @@ _hf_pipe = pipeline(
     return_full_text=False,
 )
 
-_HF_GEN_SEM = asyncio.Semaphore(1)
-# --- async wrapper, now serialized + small hygiene ---
-async def hf_model_complete(prompt: str, **kwargs) -> str:
-    # serialized calls (even on CPU, avoids thread contention)
-    async with _HF_GEN_SEM:
-        gen = _hf_pipe(
-            prompt,
-            max_new_tokens=16,
-            do_sample=False,
-            temperature=0.2,
-            top_p=0.9,
-            pad_token_id=_hf_tokenizer.pad_token_id,
-            eos_token_id=_hf_tokenizer.eos_token_id,
-        )
-        text = gen[0]["generated_text"]
-        return text.strip()
+# _HF_GEN_SEM = asyncio.Semaphore(1)
+# # --- async wrapper, now serialized + small hygiene ---
+# async def hf_model_complete(prompt: str, **kwargs) -> str:
+#     # serialized calls (even on CPU, avoids thread contention)
+#     async with _HF_GEN_SEM:
+#         gen = _hf_pipe(
+#             prompt,
+#             max_new_tokens=16,
+#             do_sample=False,
+#             #temperature=0.2,
+#             #top_p=0.9,
+#             pad_token_id=_hf_tokenizer.pad_token_id,
+#             eos_token_id=_hf_tokenizer.eos_token_id,
+#         )
+#         text = gen[0]["generated_text"]
+#         return text.strip()
+
+
+if USE_GGUF:
+    # llama.cpp backend (fast CPU)
+    from huggingface_hub import hf_hub_download
+    from llama_cpp import Llama
+
+    GGUF_REPO = "dicta-il/dictalm2.0-instruct-GGUF"
+    GGUF_FILE = "dictalm2.0-instruct.Q4_K_M.gguf"   # choose the exact file you want
+
+    gguf_path = hf_hub_download(repo_id=GGUF_REPO, filename=GGUF_FILE)
+
+    llm = Llama(
+        model_path=gguf_path,
+        n_ctx=2048,
+        n_threads=12,           # your machine: 12 CPU cores
+        logits_all=False,
+        verbose=False,
+    )
+
+    _HF_GEN_SEM = asyncio.Semaphore(1)
+
+    async def hf_model_complete(prompt: str, **kwargs) -> str:
+        async with _HF_GEN_SEM:
+            out = llm(
+                prompt,
+                max_tokens=32,
+                temperature=0.0,
+                top_p=1.0,
+                stop=["</s>", "### Instruction:", "### Response:"],
+            )
+            return out["choices"][0]["text"].strip()
+
+else:
+    # transformers backend (CPU)
+    import torch
+    from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline, GenerationConfig
+
+    _hf_tokenizer = AutoTokenizer.from_pretrained(
+        HF_LLM, use_fast=True, trust_remote_code=True, padding_side="left"
+    )
+    _hf_model = AutoModelForCausalLM.from_pretrained(
+        HF_LLM, torch_dtype=torch.float32, low_cpu_mem_usage=True, trust_remote_code=True
+    ).to("cpu").eval()
+
+    if _hf_tokenizer.pad_token_id is None:
+        _hf_tokenizer.pad_token = _hf_tokenizer.eos_token or "[PAD]"
+        _hf_model.resize_token_embeddings(len(_hf_tokenizer))
+
+    _gen_cfg = GenerationConfig(
+        max_new_tokens=32, do_sample=False, temperature=0.0, top_p=1.0,
+        pad_token_id=_hf_tokenizer.pad_token_id, eos_token_id=_hf_tokenizer.eos_token_id,
+    )
+    _hf_pipe = pipeline(
+        "text-generation",
+        model=_hf_model,
+        tokenizer=_hf_tokenizer,
+        device=-1,
+        generation_config=_gen_cfg,
+        return_full_text=False,
+    )
+
+    _HF_GEN_SEM = asyncio.Semaphore(1)
+
+    async def hf_model_complete(prompt: str, **kwargs) -> str:
+        async with _HF_GEN_SEM:
+            gen = _hf_pipe(prompt)
+            return gen[0]["generated_text"].strip()
+
+
 
 
 # ----------------------------
