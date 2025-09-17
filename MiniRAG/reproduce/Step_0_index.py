@@ -26,7 +26,7 @@ import asyncio
 from typing import List
 import pickle
 
-os.environ.setdefault("OMP_NUM_THREADS", "8")
+os.environ.setdefault("OMP_NUM_THREADS", "12")
 
 # Ensure repo root is on PYTHONPATH when running from root with `python reproduce/...`
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -48,7 +48,10 @@ from minirag.utils import EmbeddingFunc
 # Configuration & CLI parsing
 # ----------------------------
 
-EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+#EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+
+EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+
 
 def get_args():
     parser = argparse.ArgumentParser(description="MiniRAG (HF-only)")
@@ -202,7 +205,9 @@ rag = MiniRAG(
 
     chunk_token_size=3000,          # bigger chunks
     chunk_overlap_token_size=25,    # less overlap
-    tiktoken_model_name="cl100k_base", #general tokenizer, not gpt optimized
+
+    #Does not work but should look into!
+    #tiktoken_model_name="cl100k_base", #general tokenizer, not gpt optimized
 
 
     embedding_func=EmbeddingFunc(
