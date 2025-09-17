@@ -69,25 +69,25 @@ args = get_args()
 
 # Map CLI choice to HF model names (you can swap to any compatible instruct model)
 if args.model == "bloomz":
-    HF_LLM = "bigscience/bloomz-560m"          # instruction-tuned, multilingual
+    HF_LLM = "bigscience/bloomz-560m"          # instruction-tuned, multilingual NO HEBREW!
 
 elif args.model == "dictalm":
-    HF_LLM = "dicta-il/dictalm2.0-AWQ-4bit"
+    HF_LLM = "dicta-il/dictalm2.0-instruct-AWQ"
 
 elif args.model == "neo":
     HF_LLM = "Norod78/hebrew-gpt_neo-small"
 
-elif args.model == "bloom1":
-    HF_LLM = "bigscience/bloom-1b1"
-
-elif args.model == "GLM":
-    HF_LLM = "THUDM/glm-edge-1.5b-chat"
-
-elif args.model == "MiniCPM":
-    HF_LLM = "openbmb/MiniCPM3-4B"
-
-elif args.model == "qwen":
-    HF_LLM = "Qwen/Qwen2.5-0.5B-Instruct"
+# elif args.model == "bloom1":
+#     HF_LLM = "bigscience/bloom-1b1"
+#
+# elif args.model == "GLM":
+#     HF_LLM = "THUDM/glm-edge-1.5b-chat"
+#
+# elif args.model == "MiniCPM":
+#     HF_LLM = "openbmb/MiniCPM3-4B"
+#
+# elif args.model == "qwen":
+#     HF_LLM = "Qwen/Qwen2.5-0.5B-Instruct"
 else:
     print("Invalid model name. Use: bloomz | neo | bloom1 | GLM | MiniCPM | qwen")
     sys.exit(1)
