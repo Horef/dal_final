@@ -77,7 +77,7 @@ elif args.model == "dictalm":
     HF_LLM = "dicta-il/dictalm2.0-instruct-GGUF"
 
 elif args.model == "dictalm_no_gguf":
-    HF_LLM = "dicta-il/dictalm2.0-instruct-AWQ"
+    HF_LLM = "dicta-il/dictalm2.0-instruct"
 
 elif args.model == "neo":
     HF_LLM = "Norod78/hebrew-gpt_neo-small"
