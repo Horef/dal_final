@@ -51,7 +51,7 @@ EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 def get_args():
     parser = argparse.ArgumentParser(description="MiniRAG (HF-only)")
     parser.add_argument("--model", type=str, default="dictalm",
-                        help="bloomz | neo | bloom1 | GLM | MiniCPM | qwen")
+                        help="bloomz | neo | dictalm | bloom1 | GLM | MiniCPM | qwen")
     parser.add_argument("--outputpath", type=str, default="./logs/Default_output.csv")
     parser.add_argument("--workingdir", type=str, default="./Technion")
     parser.add_argument("--datapath", type=str, default="./dataset/Technion/data/")
@@ -72,7 +72,7 @@ if args.model == "bloomz":
     HF_LLM = "bigscience/bloomz-560m"          # instruction-tuned, multilingual NO HEBREW!
 
 elif args.model == "dictalm":
-    HF_LLM = "dicta-il/dictalm2.0-instruct"
+    HF_LLM = "dicta-il/dictalm2.0-instruct-GGUF"
 
 elif args.model == "neo":
     HF_LLM = "Norod78/hebrew-gpt_neo-small"
@@ -171,7 +171,7 @@ async def hf_model_complete(prompt: str, **kwargs) -> str:
         gen = _hf_pipe(
             prompt,
             max_new_tokens=64,
-            do_sample=True,
+            do_sample=False,
             temperature=0.2,
             top_p=0.9,
             pad_token_id=_hf_tokenizer.pad_token_id,
