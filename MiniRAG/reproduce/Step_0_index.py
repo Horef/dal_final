@@ -9,9 +9,9 @@ Step_0_index.py  —  MiniRAG indexer (HF-only, no OpenAI)
 - Uses sentence-transformers/all-MiniLM-L6-v2 for embeddings (384-dim)
 
 Args:
-  --model        One of: bloomz | aya | GLM | MiniCPM | qwen   (default: bloomz)
+  --model        One of: bloomz | neo | bloom1 | GLM | MiniCPM | qwen | dictalm  (default: dictalm)
   --outputpath   CSV to write logs (unused here but kept for compatibility)
-  --workingdir   Vector DB and caches directory (default: ./LiHua-World)
+  --workingdir   Vector DB and caches directory (default: ./Technion)
   --datapath     Root folder to recursively index .txt files
   --querypath    Path to queries CSV (kept for compatibility)
 
@@ -50,7 +50,7 @@ EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 
 def get_args():
     parser = argparse.ArgumentParser(description="MiniRAG (HF-only)")
-    parser.add_argument("--model", type=str, default="bloomz",
+    parser.add_argument("--model", type=str, default="dictalm",
                         help="bloomz | neo | bloom1 | GLM | MiniCPM | qwen")
     parser.add_argument("--outputpath", type=str, default="./logs/Default_output.csv")
     parser.add_argument("--workingdir", type=str, default="./Technion")
@@ -76,14 +76,18 @@ elif args.model == "dictalm":
 
 elif args.model == "neo":
     HF_LLM = "Norod78/hebrew-gpt_neo-small"
+
 elif args.model == "bloom1":
-    HF_LLM = "bigscience/bloom-1b1"            # slightly larger, still fine on 8GB
+    HF_LLM = "bigscience/bloom-1b1"
+
 elif args.model == "GLM":
-    HF_LLM = "THUDM/glm-edge-1.5b-chat"        # may fit
+    HF_LLM = "THUDM/glm-edge-1.5b-chat"
+
 elif args.model == "MiniCPM":
-    HF_LLM = "openbmb/MiniCPM3-4B"             # might OOM on 8GB
+    HF_LLM = "openbmb/MiniCPM3-4B"
+
 elif args.model == "qwen":
-    HF_LLM = "Qwen/Qwen2.5-0.5B-Instruct"        # multilingual; may OOM on 8GB
+    HF_LLM = "Qwen/Qwen2.5-0.5B-Instruct"
 else:
     print("Invalid model name. Use: bloomz | neo | bloom1 | GLM | MiniCPM | qwen")
     sys.exit(1)
@@ -107,19 +111,17 @@ _hf_tokenizer = AutoTokenizer.from_pretrained(
     HF_LLM,
     use_fast=False,
     trust_remote_code=True,
-    padding_side = "left"
+    padding_side="left",
 )
 
-#_dtype = torch.float32
-_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+_dtype = torch.float32
 _hf_model = AutoModelForCausalLM.from_pretrained(
     HF_LLM,
     torch_dtype=_dtype,
     low_cpu_mem_usage=True,
     trust_remote_code=True,
 )
-
-_hf_model.eval()
+_hf_model.to("cpu").eval()
 
 if _hf_tokenizer.pad_token_id is None:
     if _hf_tokenizer.eos_token_id is not None:
@@ -157,14 +159,15 @@ _hf_pipe = pipeline(
     "text-generation",
     model=_hf_model,
     tokenizer=_hf_tokenizer,
-    device=device_arg,
+    device=-1,
     return_full_text=False,
 )
 
 _HF_GEN_SEM = asyncio.Semaphore(1)
 # --- async wrapper, now serialized + small hygiene ---
 async def hf_model_complete(prompt: str, **kwargs) -> str:
-    async with _HF_GEN_SEM:   # serialize GPU calls
+    # serialized calls (even on CPU, avoids thread contention)
+    async with _HF_GEN_SEM:
         gen = _hf_pipe(
             prompt,
             max_new_tokens=64,
@@ -174,29 +177,8 @@ async def hf_model_complete(prompt: str, **kwargs) -> str:
             pad_token_id=_hf_tokenizer.pad_token_id,
             eos_token_id=_hf_tokenizer.eos_token_id,
         )
-        # return_full_text=False means this is just the completion
         text = gen[0]["generated_text"]
         return text.strip()
-
-# async def hf_model_complete(prompt: str, **kwargs) -> str:
-#     """
-#     Async wrapper compatible with MiniRAG's awaited LLM interface.
-#     Generates short, deterministic-ish completions for indexing/entity tasks.
-#     """
-#     gen = _hf_pipe(
-#         prompt,
-#         max_new_tokens=64,
-#         do_sample=True,
-#         temperature=0.2,
-#         top_p=0.9,
-#         pad_token_id=_hf_tokenizer.pad_token_id,
-#         eos_token_id=_hf_tokenizer.eos_token_id,
-#     )
-#     text = gen[0]["generated_text"]
-#     # Strip the prompt prefix if the pipeline returns prompt+completion
-#     if text.startswith(prompt):
-#         text = text[len(prompt):]
-#     return text.strip()
 
 
 # ----------------------------
@@ -204,7 +186,8 @@ async def hf_model_complete(prompt: str, **kwargs) -> str:
 # ----------------------------
 
 _EMB_TOKENIZER = AutoTokenizer.from_pretrained(EMBEDDING_MODEL)
-_EMB_MODEL = AutoModel.from_pretrained(EMBEDDING_MODEL).eval()
+_EMB_MODEL = AutoModel.from_pretrained(EMBEDDING_MODEL)
+_EMB_MODEL.to("cpu").eval()
 
 rag = MiniRAG(
     working_dir=WORKING_DIR,

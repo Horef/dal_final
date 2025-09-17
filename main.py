@@ -14,14 +14,6 @@ if __name__ == "__main__":
     pdf_files = [f for f in os.listdir(raw_data_path) if f.endswith('.pdf')]
     print(f"Found {len(pdf_files)} PDF files in '{raw_data_path}'.")
 
-    # Cleaning the dataset directory
-    # if os.path.exists(dataset_path):
-    #     for root, dirs, files in os.walk(dataset_path):
-    #         for file in files:
-    #             os.remove(os.path.join(root, file))
-    #         for dir in dirs:
-    #             os.rmdir(os.path.join(root, dir))
-
     if os.path.exists(dataset_path):
         shutil.rmtree(dataset_path)
     os.makedirs(dataset_path, exist_ok=True)
