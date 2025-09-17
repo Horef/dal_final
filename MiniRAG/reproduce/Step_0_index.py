@@ -72,7 +72,7 @@ if args.model == "bloomz":
     HF_LLM = "bigscience/bloomz-560m"          # instruction-tuned, multilingual NO HEBREW!
 
 elif args.model == "dictalm":
-    HF_LLM = "dicta-il/dictalm2.0-instruct-AWQ"
+    HF_LLM = "dicta-il/dictalm2.0-instruct"
 
 elif args.model == "neo":
     HF_LLM = "Norod78/hebrew-gpt_neo-small"
