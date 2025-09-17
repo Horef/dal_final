@@ -135,23 +135,23 @@ if _hf_tokenizer.pad_token_id is None:
 # Manual device placement (M60: CC 5.2; torch 1.13.1 works)
 device_arg = -1
 
-if torch.cuda.is_available():
-    print("CUDA is available")
-    try:
-        maj, minr = torch.cuda.get_device_capability(0)
-        print(f"Detected GPU: {torch.cuda.get_device_name(0)} (capability {maj}.{minr})")
-
-        if (maj, minr) >= (5, 2):  # Tesla M60 is 5.2
-            _hf_model.to("cuda:0")
-            device_arg = 0
-            print("Model successfully moved to CUDA:0")
-        else:
-            print(f"GPU capability {maj}.{minr} is below required (5.2), using CPU instead")
-    except Exception as e:
-        print(f"Error while checking CUDA device: {e}")
-        device_arg = -1
-else:
-    print("CUDA is NOT available, running on CPU")
+# if torch.cuda.is_available():
+#     print("CUDA is available")
+#     try:
+#         maj, minr = torch.cuda.get_device_capability(0)
+#         print(f"Detected GPU: {torch.cuda.get_device_name(0)} (capability {maj}.{minr})")
+#
+#         if (maj, minr) >= (5, 2):  # Tesla M60 is 5.2
+#             _hf_model.to("cuda:0")
+#             device_arg = 0
+#             print("Model successfully moved to CUDA:0")
+#         else:
+#             print(f"GPU capability {maj}.{minr} is below required (5.2), using CPU instead")
+#     except Exception as e:
+#         print(f"Error while checking CUDA device: {e}")
+#         device_arg = -1
+# else:
+#     print("CUDA is NOT available, running on CPU")
 
 print(f"Final device_arg = {device_arg}")
 
