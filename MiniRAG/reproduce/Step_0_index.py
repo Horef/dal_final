@@ -24,7 +24,8 @@ import sys
 import argparse
 import asyncio
 from typing import List
-import pickle
+#import pickle
+import cloudpickle as pickle
 
 os.environ.setdefault("OMP_NUM_THREADS", "12")
 
@@ -203,8 +204,8 @@ rag = MiniRAG(
     llm_model_max_token_size=200,
     llm_model_name=HF_LLM,
 
-    chunk_token_size=3000,          # bigger chunks
-    chunk_overlap_token_size=25,    # less overlap
+    chunk_token_size=4000,          # bigger chunks
+    chunk_overlap_token_size=10,    # less overlap
 
     #Does not work but should look into!
     #tiktoken_model_name="cl100k_base", #general tokenizer, not gpt optimized
