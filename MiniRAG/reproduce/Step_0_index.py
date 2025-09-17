@@ -116,22 +116,22 @@ os.makedirs(WORKING_DIR, exist_ok=True)
 # Build a single HF text-gen pipeline (loads once)
 # ----------------------------
 
-
-_hf_tokenizer = AutoTokenizer.from_pretrained(
-    HF_LLM,
-    use_fast=False,
-    trust_remote_code=True,
-    padding_side="left",
-)
-
-_dtype = torch.float32
-_hf_model = AutoModelForCausalLM.from_pretrained(
-    HF_LLM,
-    torch_dtype=_dtype,
-    low_cpu_mem_usage=True,
-    trust_remote_code=True,
-)
-_hf_model.to("cpu").eval()
+#
+# _hf_tokenizer = AutoTokenizer.from_pretrained(
+#     HF_LLM,
+#     use_fast=False,
+#     trust_remote_code=True,
+#     padding_side="left",
+# )
+#
+# _dtype = torch.float32
+# _hf_model = AutoModelForCausalLM.from_pretrained(
+#     HF_LLM,
+#     torch_dtype=_dtype,
+#     low_cpu_mem_usage=True,
+#     trust_remote_code=True,
+# )
+# _hf_model.to("cpu").eval()
 
 # if _hf_tokenizer.pad_token_id is None:
 #     if _hf_tokenizer.eos_token_id is not None:
