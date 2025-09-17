@@ -100,8 +100,6 @@ else:
 
 USE_GGUF = HF_LLM.lower().endswith("-gguf")
 
-
-
 WORKING_DIR = args.workingdir
 DATA_PATH   = args.datapath
 QUERY_PATH  = args.querypath
@@ -112,83 +110,6 @@ print("USING WORKING DIR:", WORKING_DIR)
 
 os.makedirs(WORKING_DIR, exist_ok=True)
 
-# ----------------------------
-# Build a single HF text-gen pipeline (loads once)
-# ----------------------------
-
-#
-# _hf_tokenizer = AutoTokenizer.from_pretrained(
-#     HF_LLM,
-#     use_fast=False,
-#     trust_remote_code=True,
-#     padding_side="left",
-# )
-#
-# _dtype = torch.float32
-# _hf_model = AutoModelForCausalLM.from_pretrained(
-#     HF_LLM,
-#     torch_dtype=_dtype,
-#     low_cpu_mem_usage=True,
-#     trust_remote_code=True,
-# )
-# _hf_model.to("cpu").eval()
-
-# if _hf_tokenizer.pad_token_id is None:
-#     if _hf_tokenizer.eos_token_id is not None:
-#         _hf_tokenizer.pad_token = _hf_tokenizer.eos_token
-#     else:
-#         _hf_tokenizer.add_special_tokens({"pad_token": "[PAD]"})
-#         _hf_model.resize_token_embeddings(len(_hf_tokenizer))
-
-
-
-# Manual device placement (M60: CC 5.2; torch 1.13.1 works)
-# device_arg = -1
-
-# if torch.cuda.is_available():
-#     print("CUDA is available")
-#     try:
-#         maj, minr = torch.cuda.get_device_capability(0)
-#         print(f"Detected GPU: {torch.cuda.get_device_name(0)} (capability {maj}.{minr})")
-#
-#         if (maj, minr) >= (5, 2):  # Tesla M60 is 5.2
-#             _hf_model.to("cuda:0")
-#             device_arg = 0
-#             print("Model successfully moved to CUDA:0")
-#         else:
-#             print(f"GPU capability {maj}.{minr} is below required (5.2), using CPU instead")
-#     except Exception as e:
-#         print(f"Error while checking CUDA device: {e}")
-#         device_arg = -1
-# else:
-#     print("CUDA is NOT available, running on CPU")
-
-# print(f"Final device_arg = {device_arg}")
-#
-# _hf_pipe = pipeline(
-#     "text-generation",
-#     model=_hf_model,
-#     tokenizer=_hf_tokenizer,
-#     device=-1,
-#     return_full_text=False,
-# )
-
-# _HF_GEN_SEM = asyncio.Semaphore(1)
-# # --- async wrapper, now serialized + small hygiene ---
-# async def hf_model_complete(prompt: str, **kwargs) -> str:
-#     # serialized calls (even on CPU, avoids thread contention)
-#     async with _HF_GEN_SEM:
-#         gen = _hf_pipe(
-#             prompt,
-#             max_new_tokens=16,
-#             do_sample=False,
-#             #temperature=0.2,
-#             #top_p=0.9,
-#             pad_token_id=_hf_tokenizer.pad_token_id,
-#             eos_token_id=_hf_tokenizer.eos_token_id,
-#         )
-#         text = gen[0]["generated_text"]
-#         return text.strip()
 
 
 if USE_GGUF:
@@ -203,8 +124,9 @@ if USE_GGUF:
 
     llm = Llama(
         model_path=gguf_path,
-        n_ctx=2048,
+        n_ctx=8192,
         n_threads=12,           # your machine: 12 CPU cores
+        n_batch=1024,
         logits_all=False,
         verbose=False,
     )
@@ -231,7 +153,10 @@ else:
         HF_LLM, use_fast=True, trust_remote_code=True, padding_side="left"
     )
     _hf_model = AutoModelForCausalLM.from_pretrained(
-        HF_LLM, torch_dtype=torch.float32, low_cpu_mem_usage=True, trust_remote_code=True
+        HF_LLM,
+        torch_dtype=torch.float32,
+        low_cpu_mem_usage=True,
+        trust_remote_code=True
     ).to("cpu").eval()
 
     if _hf_tokenizer.pad_token_id is None:
