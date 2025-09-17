@@ -199,6 +199,12 @@ rag = MiniRAG(
     llm_model_func=hf_model_complete,
     llm_model_max_token_size=200,
     llm_model_name=HF_LLM,
+
+    chunk_token_size=3000,          # bigger chunks
+    chunk_overlap_token_size=25,    # less overlap
+    tiktoken_model_name="cl100k_base", #general tokenizer, not gpt optimized
+
+
     embedding_func=EmbeddingFunc(
         embedding_dim=384,
         max_token_size=1000,
