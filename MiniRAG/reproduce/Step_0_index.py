@@ -133,17 +133,17 @@ _hf_model = AutoModelForCausalLM.from_pretrained(
 )
 _hf_model.to("cpu").eval()
 
-if _hf_tokenizer.pad_token_id is None:
-    if _hf_tokenizer.eos_token_id is not None:
-        _hf_tokenizer.pad_token = _hf_tokenizer.eos_token
-    else:
-        _hf_tokenizer.add_special_tokens({"pad_token": "[PAD]"})
-        _hf_model.resize_token_embeddings(len(_hf_tokenizer))
+# if _hf_tokenizer.pad_token_id is None:
+#     if _hf_tokenizer.eos_token_id is not None:
+#         _hf_tokenizer.pad_token = _hf_tokenizer.eos_token
+#     else:
+#         _hf_tokenizer.add_special_tokens({"pad_token": "[PAD]"})
+#         _hf_model.resize_token_embeddings(len(_hf_tokenizer))
 
 
 
 # Manual device placement (M60: CC 5.2; torch 1.13.1 works)
-device_arg = -1
+# device_arg = -1
 
 # if torch.cuda.is_available():
 #     print("CUDA is available")
@@ -163,15 +163,15 @@ device_arg = -1
 # else:
 #     print("CUDA is NOT available, running on CPU")
 
-print(f"Final device_arg = {device_arg}")
-
-_hf_pipe = pipeline(
-    "text-generation",
-    model=_hf_model,
-    tokenizer=_hf_tokenizer,
-    device=-1,
-    return_full_text=False,
-)
+# print(f"Final device_arg = {device_arg}")
+#
+# _hf_pipe = pipeline(
+#     "text-generation",
+#     model=_hf_model,
+#     tokenizer=_hf_tokenizer,
+#     device=-1,
+#     return_full_text=False,
+# )
 
 # _HF_GEN_SEM = asyncio.Semaphore(1)
 # # --- async wrapper, now serialized + small hygiene ---
