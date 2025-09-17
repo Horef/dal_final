@@ -26,6 +26,8 @@ import asyncio
 from typing import List
 import pickle
 
+os.environ.setdefault("OMP_NUM_THREADS", "8")
+
 # Ensure repo root is on PYTHONPATH when running from root with `python reproduce/...`
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -74,6 +76,9 @@ if args.model == "bloomz":
 elif args.model == "dictalm":
     HF_LLM = "dicta-il/dictalm2.0-instruct-GGUF"
 
+elif args.model == "dictalm_no_gguf":
+    HF_LLM = "dicta-il/dictalm2.0-instruct-AWQ"
+
 elif args.model == "neo":
     HF_LLM = "Norod78/hebrew-gpt_neo-small"
 
@@ -91,6 +96,11 @@ elif args.model == "neo":
 else:
     print("Invalid model name. Use: bloomz | neo | bloom1 | GLM | MiniCPM | qwen")
     sys.exit(1)
+
+
+USE_GGUF = HF_LLM.lower().endswith("-gguf")
+
+
 
 WORKING_DIR = args.workingdir
 DATA_PATH   = args.datapath
@@ -170,7 +180,7 @@ async def hf_model_complete(prompt: str, **kwargs) -> str:
     async with _HF_GEN_SEM:
         gen = _hf_pipe(
             prompt,
-            max_new_tokens=64,
+            max_new_tokens=16,
             do_sample=False,
             temperature=0.2,
             top_p=0.9,
