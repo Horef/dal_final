@@ -77,6 +77,9 @@ os.makedirs(WORKING_DIR, exist_ok=True)
 # Build completion function
 # ----------------------------
 if USE_GGUF:
+    from huggingface_hub import hf_hub_download
+    from llama_cpp import Llama
+
     GGUF_REPO = "dicta-il/dictalm2.0-instruct-GGUF"
     GGUF_FILE = "dictalm2.0-instruct.Q4_K_M.gguf"
     gguf_path = hf_hub_download(repo_id=GGUF_REPO, filename=GGUF_FILE)
