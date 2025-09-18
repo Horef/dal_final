@@ -36,25 +36,14 @@ from .prompt import GRAPH_FIELD_SEP, PROMPTS
 def chunking_by_token_size(
     content: str, overlap_token_size=128, max_token_size=1024, tiktoken_model="gpt-4o"
 ):
-    # because we are already giving the documents in a chunked form, there is no need to
-    # do rechunking.
-    return [content]
     tokens = encode_string_by_tiktoken(content, model_name=tiktoken_model)
-    results = []
-    for index, start in enumerate(
-        range(0, len(tokens), max_token_size - overlap_token_size)
-    ):
-        chunk_content = decode_tokens_by_tiktoken(
-            tokens[start : start + max_token_size], model_name=tiktoken_model
-        )
-        results.append(
-            {
-                "tokens": min(max_token_size, len(tokens) - start),
-                "content": chunk_content.strip(),
-                "chunk_order_index": index,
-            }
-        )
-    return results
+    return [
+        {
+            "tokens": len(tokens),
+            "content": content.strip(),
+            "chunk_order_index": 0,
+        }
+    ]
 
 
 async def _handle_entity_relation_summary(
