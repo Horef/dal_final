@@ -39,22 +39,21 @@ def get_args():
 args = get_args()
 
 
-if args.model == "bloomz":
-    LLM_MODEL = "bigscience/bloomz-560m"
-elif args.model == "dictalm":
-    LLM_MODEL = "dicta-il/dictalm2.0"
-elif args.model == "dictalm_no_gguf":
-    LLM_MODEL = "dicta-il/dictalm2.0-instruct"
-elif args.model == "neo":
-    LLM_MODEL = "Norod78/hebrew-gpt_neo-small"
-elif args.model == "bloom1":
-    LLM_MODEL = "bigscience/bloom-1b1"
-elif args.model == "GLM":
-    LLM_MODEL = "THUDM/glm-edge-1.5b-chat"
-elif args.model == "MiniCPM":
-    LLM_MODEL = "openbmb/MiniCPM3-4B"
-elif args.model == "qwen":
-    LLM_MODEL = "Qwen/Qwen2.5-0.5B-Instruct"
+
+if args.model == "dictalm":
+    LLM_MODEL = "dicta-il/dictalm2.0-instruct-GGUF"
+# elif args.model == "dictalm_no_gguf":
+#     LLM_MODEL = "dicta-il/dictalm2.0-instruct"
+# elif args.model == "neo":
+#     LLM_MODEL = "Norod78/hebrew-gpt_neo-small"
+# elif args.model == "bloom1":
+#     LLM_MODEL = "bigscience/bloom-1b1"
+# elif args.model == "GLM":
+#     LLM_MODEL = "THUDM/glm-edge-1.5b-chat"
+# elif args.model == "MiniCPM":
+#     LLM_MODEL = "openbmb/MiniCPM3-4B"
+# elif args.model == "qwen":
+#     LLM_MODEL = "Qwen/Qwen2.5-0.5B-Instruct"
 else:
     print("Invalid model name")
     exit(1)

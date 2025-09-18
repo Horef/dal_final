@@ -57,7 +57,7 @@ EMBEDDING_MODEL = "dicta-il/dictabert"
 def get_args():
     parser = argparse.ArgumentParser(description="MiniRAG (HF-only)")
     parser.add_argument("--model", type=str, default="dictalm",
-                        help="bloomz | neo | dictalm | bloom1 | GLM | MiniCPM | qwen")
+                        help="Currently only dictalm works!")
     parser.add_argument("--outputpath", type=str, default="./logs/Default_output.csv")
     parser.add_argument("--workingdir", type=str, default="./Technion")
     parser.add_argument("--datapath", type=str, default="./dataset/Technion/data/")
@@ -74,17 +74,19 @@ def get_args():
 args = get_args()
 
 # Map CLI choice to HF model names (you can swap to any compatible instruct model)
-if args.model == "bloomz":
-    HF_LLM = "bigscience/bloomz-560m"          # instruction-tuned, multilingual NO HEBREW!
 
-elif args.model == "dictalm":
+
+if args.model == "dictalm":
     HF_LLM = "dicta-il/dictalm2.0-instruct-GGUF"
 
-elif args.model == "dictalm_no_gguf":
-    HF_LLM = "dicta-il/dictalm2.0-instruct"
-
-elif args.model == "neo":
-    HF_LLM = "Norod78/hebrew-gpt_neo-small"
+# elif args.model == "bloomz":
+#     HF_LLM = "bigscience/bloomz-560m"          # instruction-tuned, multilingual NO HEBREW!
+#
+# elif args.model == "dictalm_no_gguf":
+#     HF_LLM = "dicta-il/dictalm2.0-instruct"
+#
+# elif args.model == "neo":
+#     HF_LLM = "Norod78/hebrew-gpt_neo-small"
 
 # elif args.model == "bloom1":
 #     HF_LLM = "bigscience/bloom-1b1"
@@ -98,7 +100,7 @@ elif args.model == "neo":
 # elif args.model == "qwen":
 #     HF_LLM = "Qwen/Qwen2.5-0.5B-Instruct"
 else:
-    print("Invalid model name. Use: bloomz | neo | bloom1 | GLM | MiniCPM | qwen")
+    print("Currently only dictalm works!")
     sys.exit(1)
 
 
