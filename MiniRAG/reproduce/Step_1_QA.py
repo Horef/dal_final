@@ -6,7 +6,7 @@ import sys
 import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
+os.environ.setdefault("OMP_NUM_THREADS", "12")
 
 import csv
 from tqdm import trange
@@ -18,14 +18,14 @@ from minirag.llm import (
 from minirag.utils import EmbeddingFunc
 from transformers import AutoModel, AutoTokenizer
 
-EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+EMBEDDING_MODEL = "dicta-il/dictabert"
 
 import argparse
 
 
 def get_args():
     parser = argparse.ArgumentParser(description="MiniRAG")
-    parser.add_argument("--model", type=str, default="bloomz")
+    parser.add_argument("--model", type=str, default="dictalm")
     parser.add_argument("--outputpath", type=str, default="./logs/Default_output.csv")
     parser.add_argument("--workingdir", type=str, default="./Technion")
     parser.add_argument("--datapath", type=str, default="./dataset/Technion/data/")
@@ -43,6 +43,8 @@ if args.model == "bloomz":
     LLM_MODEL = "bigscience/bloomz-560m"
 elif args.model == "dictalm":
     HF_LLM = "dicta-il/dictalm2.0"
+elif args.model == "dictalm_no_gguf":
+    HF_LLM = "dicta-il/dictalm2.0-instruct"
 elif args.model == "neo":
     HF_LLM = "Norod78/hebrew-gpt_neo-small"
 elif args.model == "bloom1":
@@ -57,21 +59,23 @@ else:
     print("Invalid model name")
     exit(1)
 
+
+USE_GGUF = HF_LLM.lower().endswith("-gguf")
+
 WORKING_DIR = args.workingdir
 DATA_PATH = args.datapath
 QUERY_PATH = args.querypath
 OUTPUT_PATH = args.outputpath
+
 print("USING LLM:", LLM_MODEL)
 print("USING WORKING DIR:", WORKING_DIR)
 
 
-if not os.path.exists(WORKING_DIR):
-    os.mkdir(WORKING_DIR)
+os.makedirs(WORKING_DIR, exist_ok=True)
 
 rag = MiniRAG(
     working_dir=WORKING_DIR,
     llm_model_func=hf_model_complete,
-    # llm_model_func=gpt_4o_mini_complete,
     llm_model_max_token_size=200,
     llm_model_name=LLM_MODEL,
     embedding_func=EmbeddingFunc(
@@ -84,6 +88,9 @@ rag = MiniRAG(
         ),
     ),
 )
+
+
+
 
 # Now QA
 QUESTION_LIST = []

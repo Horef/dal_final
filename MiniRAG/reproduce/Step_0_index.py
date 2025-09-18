@@ -51,7 +51,7 @@ from minirag.utils import EmbeddingFunc
 
 #EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 
-EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+EMBEDDING_MODEL = "dicta-il/dictabert"
 
 
 def get_args():
@@ -122,14 +122,14 @@ if USE_GGUF:
     from llama_cpp import Llama
 
     GGUF_REPO = "dicta-il/dictalm2.0-instruct-GGUF"
-    GGUF_FILE = "dictalm2.0-instruct.Q4_K_M.gguf"   # choose the exact file you want
+    GGUF_FILE = "dictalm2.0-instruct.Q4_K_M.gguf"
 
     gguf_path = hf_hub_download(repo_id=GGUF_REPO, filename=GGUF_FILE)
 
     llm = Llama(
         model_path=gguf_path,
         n_ctx=8192,
-        n_threads=12,           # your machine: 12 CPU cores
+        n_threads=12,
         n_batch=1024,
         logits_all=False,
         verbose=False,
@@ -149,7 +149,6 @@ if USE_GGUF:
             return out["choices"][0]["text"].strip()
 
 else:
-    # transformers backend (CPU)
     import torch
     from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline, GenerationConfig
 
@@ -204,16 +203,13 @@ rag = MiniRAG(
     llm_model_max_token_size=200,
     llm_model_name=HF_LLM,
 
-    chunk_token_size=4000,          # bigger chunks
-    chunk_overlap_token_size=10,    # less overlap
-
-    #Does not work but should look into!
-    #tiktoken_model_name="cl100k_base", #general tokenizer, not gpt optimized
+    # chunk_token_size=4000,
+    # chunk_overlap_token_size=10,
 
 
     embedding_func=EmbeddingFunc(
-        embedding_dim=384,
-        max_token_size=1000,
+        embedding_dim=768,
+        max_token_size=512,
         func=lambda texts: hf_embed(
             texts,
             tokenizer=_EMB_TOKENIZER,
@@ -268,7 +264,7 @@ def main():
         # Periodic checkpointing
         if args.save:
             if step is None:
-                do_checkpoint = (idx == total)  # only at the very end
+                do_checkpoint = (idx == total)
             else:
                 do_checkpoint = (idx % step == 0) or (idx == total)
 
