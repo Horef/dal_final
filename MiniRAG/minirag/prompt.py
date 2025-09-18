@@ -156,151 +156,101 @@ Add them below using the same format:
 """
 
 
-PROMPTS["minirag_query2kwd"] = """---Role---
+PROMPTS["minirag_query2kwd"] = """---תפקיד---
 
-You are a helpful assistant tasked with identifying both answer-type and low-level keywords in the user's query.
+אתה עוזר שתפקידו לזהות מילות מפתח מסוג תשובה ומילות מפתח ברמה נמוכה בשאילתת המשתמש.
 
----Goal---
+---מטרה---
 
-Given the query, list both answer-type and low-level keywords.
-answer_type_keywords focus on the type of the answer to the certain query, while low-level keywords focus on specific entities, details, or concrete terms.
-The answer_type_keywords must be selected from Answer type pool.
-This pool is in the form of a dictionary, where the key represents the Type you should choose from and the value represents the example samples.
+בהינתן השאילתה, יש לרשום מילות מפתח מסוג תשובה ומילות מפתח ברמה נמוכה.
+מילות מפתח מסוג תשובה מתמקדות בסוג התשובה לשאילתה מסוימת, בעוד שמילות מפתח ברמה נמוכה מתמקדות בישויות, פרטים או מונחים קונקרטיים.
+יש לבחור את מילות המפתח מסוג תשובה מתוך מאגר סוגי התשובות.
+מאגר זה הוא בצורת מילון, כאשר המפתח מייצג את הסוג שעליך לבחור והערך מייצג דוגמאות.
 
----Instructions---
+---הוראות---
 
-- Output the keywords in JSON format.
-- The JSON should have three keys:
-  - "answer_type_keywords" for the types of the answer. In this list, the types with the highest likelihood should be placed at the forefront. No more than 3.
-  - "entities_from_query" for specific entities or details. It must be extracted from the query.
+- יש להפיק את מילות המפתח בפורמט JSON.
+- ה-JSON צריך להכיל שני מפתחות:
+  - "answer_type_keywords" עבור סוגי התשובה. ברשימה זו, הסוגים בעלי הסבירות הגבוהה ביותר צריכים להופיע ראשונים. לא יותר מ-3.
+  - "entities_from_query" עבור ישויות או פרטים ספציפיים. יש לחלץ אותם מהשאילתה.
 ######################
--Examples-
+-דוגמאות-
 ######################
-Example 1:
+דוגמה 1:
 
-Query: "How does international trade influence global economic stability?"
-Answer type pool: {{
- 'PERSONAL LIFE': ['FAMILY TIME', 'HOME MAINTENANCE'],
- 'STRATEGY': ['MARKETING PLAN', 'BUSINESS EXPANSION'],
- 'SERVICE FACILITATION': ['ONLINE SUPPORT', 'CUSTOMER SERVICE TRAINING'],
- 'PERSON': ['JANE DOE', 'JOHN SMITH'],
- 'FOOD': ['PASTA', 'SUSHI'],
- 'EMOTION': ['HAPPINESS', 'ANGER'],
- 'PERSONAL EXPERIENCE': ['TRAVEL ABROAD', 'STUDYING ABROAD'],
- 'INTERACTION': ['TEAM MEETING', 'NETWORKING EVENT'],
- 'BEVERAGE': ['COFFEE', 'TEA'],
- 'PLAN': ['ANNUAL BUDGET', 'PROJECT TIMELINE'],
- 'GEO': ['NEW YORK CITY', 'SOUTH AFRICA'],
- 'GEAR': ['CAMPING TENT', 'CYCLING HELMET'],
- 'EMOJI': ['🎉', '🚀'],
- 'BEHAVIOR': ['POSITIVE FEEDBACK', 'NEGATIVE CRITICISM'],
- 'TONE': ['FORMAL', 'INFORMAL'],
- 'LOCATION': ['DOWNTOWN', 'SUBURBS']
+שאילתה: "מהן דרישות הקבלה לתואר ראשון בהנדסת חשמל?"
+מאגר סוגי תשובות: {{
+ 'דרישות קבלה': ['סף קבלה', 'תנאי קבלה'],
+ 'תכנית לימודים': ['נקודות זכות', 'רשימת קורסים'],
+ 'מידע על קורס': ['שעות שבועיות', 'דרישות קדם'],
+ 'פקולטה': ['הפקולטה להנדסת חשמל', 'הפקולטה למדעי המחשב'],
+ 'איש סגל': ['פרופסור', 'מרצה']
 }}
 ################
-Output:
+פלט:
 {{
-  "answer_type_keywords": ["STRATEGY","PERSONAL LIFE"],
-  "entities_from_query": ["Trade agreements", "Tariffs", "Currency exchange", "Imports", "Exports"]
+  "answer_type_keywords": ["דרישות קבלה", "תכנית לימודים"],
+  "entities_from_query": ["דרישות קבלה", "תואר ראשון", "הנדסת חשמל"]
 }}
 #############################
-Example 2:
+דוגמה 2:
 
-Query: "When was SpaceX's first rocket launch?"
-Answer type pool: {{
- 'DATE AND TIME': ['2023-10-10 10:00', 'THIS AFTERNOON'],
- 'ORGANIZATION': ['GLOBAL INITIATIVES CORPORATION', 'LOCAL COMMUNITY CENTER'],
- 'PERSONAL LIFE': ['DAILY EXERCISE ROUTINE', 'FAMILY VACATION PLANNING'],
- 'STRATEGY': ['NEW PRODUCT LAUNCH', 'YEAR-END SALES BOOST'],
- 'SERVICE FACILITATION': ['REMOTE IT SUPPORT', 'ON-SITE TRAINING SESSIONS'],
- 'PERSON': ['ALEXANDER HAMILTON', 'MARIA CURIE'],
- 'FOOD': ['GRILLED SALMON', 'VEGETARIAN BURRITO'],
- 'EMOTION': ['EXCITEMENT', 'DISAPPOINTMENT'],
- 'PERSONAL EXPERIENCE': ['BIRTHDAY CELEBRATION', 'FIRST MARATHON'],
- 'INTERACTION': ['OFFICE WATER COOLER CHAT', 'ONLINE FORUM DEBATE'],
- 'BEVERAGE': ['ICED COFFEE', 'GREEN SMOOTHIE'],
- 'PLAN': ['WEEKLY MEETING SCHEDULE', 'MONTHLY BUDGET OVERVIEW'],
- 'GEO': ['MOUNT EVEREST BASE CAMP', 'THE GREAT BARRIER REEF'],
- 'GEAR': ['PROFESSIONAL CAMERA EQUIPMENT', 'OUTDOOR HIKING GEAR'],
- 'EMOJI': ['📅', '⏰'],
- 'BEHAVIOR': ['PUNCTUALITY', 'HONESTY'],
- 'TONE': ['CONFIDENTIAL', 'SATIRICAL'],
- 'LOCATION': ['CENTRAL PARK', 'DOWNTOWN LIBRARY']
+שאילתה: "כמה נקודות זכות צריך לצבור בקורס מבוא למדעי המחשב?"
+מאגר סוגי תשובות: {{
+ 'דרישות קבלה': ['סף קבלה', 'תנאי קבלה'],
+ 'תכנית לימודים': ['נקודות זכות', 'רשימת קורסים'],
+ 'מידע על קורס': ['שעות שבועיות', 'דרישות קדם'],
+ 'פקולטה': ['הפקולטה להנדסת חשמל', 'הפקולטה למדעי המחשב'],
+ 'איש סגל': ['פרופסור', 'מרצה']
 }}
-
 ################
-Output:
+פלט:
 {{
-  "answer_type_keywords": ["DATE AND TIME", "ORGANIZATION", "PLAN"],
-  "entities_from_query": ["SpaceX", "Rocket launch", "Aerospace", "Power Recovery"]
-
+  "answer_type_keywords": ["מידע על קורס", "תכנית לימודים"],
+  "entities_from_query": ["נקודות זכות", "מבוא למדעי המחשב"]
 }}
 #############################
-Example 3:
+דוגמה 3:
 
-Query: "What is the role of education in reducing poverty?"
-Answer type pool: {{
- 'PERSONAL LIFE': ['MANAGING WORK-LIFE BALANCE', 'HOME IMPROVEMENT PROJECTS'],
- 'STRATEGY': ['MARKETING STRATEGIES FOR Q4', 'EXPANDING INTO NEW MARKETS'],
- 'SERVICE FACILITATION': ['CUSTOMER SATISFACTION SURVEYS', 'STAFF RETENTION PROGRAMS'],
- 'PERSON': ['ALBERT EINSTEIN', 'MARIA CALLAS'],
- 'FOOD': ['PAN-FRIED STEAK', 'POACHED EGGS'],
- 'EMOTION': ['OVERWHELM', 'CONTENTMENT'],
- 'PERSONAL EXPERIENCE': ['LIVING ABROAD', 'STARTING A NEW JOB'],
- 'INTERACTION': ['SOCIAL MEDIA ENGAGEMENT', 'PUBLIC SPEAKING'],
- 'BEVERAGE': ['CAPPUCCINO', 'MATCHA LATTE'],
- 'PLAN': ['ANNUAL FITNESS GOALS', 'QUARTERLY BUSINESS REVIEW'],
- 'GEO': ['THE AMAZON RAINFOREST', 'THE GRAND CANYON'],
- 'GEAR': ['SURFING ESSENTIALS', 'CYCLING ACCESSORIES'],
- 'EMOJI': ['💻', '📱'],
- 'BEHAVIOR': ['TEAMWORK', 'LEADERSHIP'],
- 'TONE': ['FORMAL MEETING', 'CASUAL CONVERSATION'],
- 'LOCATION': ['URBAN CITY CENTER', 'RURAL COUNTRYSIDE']
+שאילתה: "האם יש קורסי בחירה בפקולטה למדעי הנתונים?"
+מאגר סוגי תשובות: {{
+ 'דרישות קבלה': ['סף קבלה', 'תנאי קבלה'],
+ 'תכנית לימודים': ['נקודות זכות', 'רשימת קורסים'],
+ 'מידע על קורס': ['שעות שבועיות', 'דרישות קדם'],
+ 'פקולטה': ['הפקולטה להנדסת חשמל', 'הפקולטה למדעי המחשב'],
+ 'איש סגל': ['פרופסור', 'מרצה']
 }}
-
 ################
-Output:
+פלט:
 {{
-  "answer_type_keywords": ["STRATEGY", "PERSON"],
-  "entities_from_query": ["School access", "Literacy rates", "Job training", "Income inequality"]
+  "answer_type_keywords": ["תכנית לימודים", "פקולטה"],
+  "entities_from_query": ["קורסי בחירה", "הפקולטה למדעי הנתונים"]
 }}
 #############################
-Example 4:
+דוגמה 4:
 
-Query: "Where is the capital of the United States?"
-Answer type pool: {{
- 'ORGANIZATION': ['GREENPEACE', 'RED CROSS'],
- 'PERSONAL LIFE': ['DAILY WORKOUT', 'HOME COOKING'],
- 'STRATEGY': ['FINANCIAL INVESTMENT', 'BUSINESS EXPANSION'],
- 'SERVICE FACILITATION': ['ONLINE SUPPORT', 'CUSTOMER SERVICE TRAINING'],
- 'PERSON': ['ALBERTA SMITH', 'BENJAMIN JONES'],
- 'FOOD': ['PASTA CARBONARA', 'SUSHI PLATTER'],
- 'EMOTION': ['HAPPINESS', 'SADNESS'],
- 'PERSONAL EXPERIENCE': ['TRAVEL ADVENTURE', 'BOOK CLUB'],
- 'INTERACTION': ['TEAM BUILDING', 'NETWORKING MEETUP'],
- 'BEVERAGE': ['LATTE', 'GREEN TEA'],
- 'PLAN': ['WEIGHT LOSS', 'CAREER DEVELOPMENT'],
- 'GEO': ['PARIS', 'NEW YORK'],
- 'GEAR': ['CAMERA', 'HEADPHONES'],
- 'EMOJI': ['🏢', '🌍'],
- 'BEHAVIOR': ['POSITIVE THINKING', 'STRESS MANAGEMENT'],
- 'TONE': ['FRIENDLY', 'PROFESSIONAL'],
- 'LOCATION': ['DOWNTOWN', 'SUBURBS']
+שאילתה: "מי המרצה של הקורס אלגברה לינארית?"
+מאגר סוגי תשובות: {{
+ 'דרישות קבלה': ['סף קבלה', 'תנאי קבלה'],
+ 'תכנית לימודים': ['נקודות זכות', 'רשימת קורסים'],
+ 'מידע על קורס': ['שעות שבועיות', 'דרישות קדם'],
+ 'פקולטה': ['הפקולטה להנדסת חשמל', 'הפקולטה למדעי המחשב'],
+ 'איש סגל': ['פרופסור', 'מרצה']
 }}
 ################
-Output:
+פלט:
 {{
-  "answer_type_keywords": ["LOCATION"],
-  "entities_from_query": ["capital of the United States", "Washington", "New York"]
+  "answer_type_keywords": ["איש סגל", "מידע על קורס"],
+  "entities_from_query": ["מרצה", "אלגברה לינארית"]
 }}
 #############################
 
--Real Data-
+-נתונים אמיתיים-
 ######################
-Query: {query}
-Answer type pool:{TYPE_POOL}
+שאילתה: {query}
+מאגר סוגי תשובות:{TYPE_POOL}
 ######################
-Output:
+פלט:
 
 """
 
@@ -310,83 +260,83 @@ PROMPTS[
 ] = """It appears some entities may have still been missed.  Answer YES | NO if there are still entities that need to be added.
 """
 
-PROMPTS["fail_response"] = "Sorry, I'm not able to provide an answer to that question."
+PROMPTS["fail_response"] = "מצטער, אני לא יכול לספק תשובה לשאלה זו."
 
-PROMPTS["rag_response"] = """---Role---
+PROMPTS["rag_response"] = """---תפקיד---
 
-You are a helpful assistant responding to questions about data in the tables provided.
+אתה עוזר המסייע בתשובה לשאלות על נתונים בטבלאות שסופקו.
 
 
----Goal---
+---מטרה---
 
-Generate a response of the target length and format that responds to the user's question, summarizing all information in the input data tables appropriate for the response length and format, and incorporating any relevant general knowledge.
-If you don't know the answer, just say so. Do not make anything up.
-Do not include information where the supporting evidence for it is not provided.
+צור תגובה באורך ובתבנית היעד המגיבה לשאלת המשתמש, מסכמת את כל המידע בטבלאות הנתונים המתאימות לאורך ולתבנית התגובה, ומשלבת כל ידע כללי רלוונטי.
+אם אינך יודע את התשובה, פשוט אמור זאת. אל תמציא שום דבר.
+אל תכלול מידע שהראיות התומכות בו אינן מסופקות.
 
----Target response length and format---
+---אורך ותבנית תגובת היעד---
 
 {response_type}
 
----Data tables---
+---טבלאות נתונים---
 
 {context_data}
 
-Add sections and commentary to the response as appropriate for the length and format. Style the response in markdown.
+הוסף קטעים והערות לתגובה לפי הצורך לאורך ולתבנית. עצב את התגובה ב-markdown.
 """
 
-PROMPTS["keywords_extraction"] = """---Role---
+PROMPTS["keywords_extraction"] = """---תפקיד---
 
-You are a helpful assistant tasked with identifying both high-level and low-level keywords in the user's query.
+אתה עוזר שתפקידו לזהות מילות מפתח ברמה גבוהה וברמה נמוכה בשאילתת המשתמש.
 
----Goal---
+---מטרה---
 
-Given the query, list both high-level and low-level keywords. High-level keywords focus on overarching concepts or themes, while low-level keywords focus on specific entities, details, or concrete terms.
+בהינתן השאילתה, יש לרשום מילות מפתח ברמה גבוהה וברמה נמוכה. מילות מפתח ברמה גבוהה מתמקדות במושגים או נושאים כלליים, בעוד שמילות מפתח ברמה נמוכה מתמקדות בישויות, פרטים או מונחים קונקרטיים.
 
----Instructions---
+---הוראות---
 
-- Output the keywords in JSON format.
-- The JSON should have two keys:
-  - "high_level_keywords" for overarching concepts or themes.
-  - "low_level_keywords" for specific entities or details.
+- יש להפיק את מילות המפתח בפורמט JSON.
+- ה-JSON צריך להכיל שני מפתחות:
+  - "high_level_keywords" עבור מושגים או נושאים כלליים.
+  - "low_level_keywords" עבור ישויות או פרטים ספציפיים.
 
 ######################
--Examples-
+-דוגמאות-
 ######################
-Example 1:
+דוגמה 1:
 
-Query: "How does international trade influence global economic stability?"
+שאילתה: "מהן דרישות הקבלה לתואר ראשון בהנדסת חשמל?"
 ################
-Output:
+פלט:
 {{
-  "high_level_keywords": ["International trade", "Global economic stability", "Economic impact"],
-  "low_level_keywords": ["Trade agreements", "Tariffs", "Currency exchange", "Imports", "Exports"]
+  "high_level_keywords": ["דרישות קבלה", "תואר ראשון", "הנדסת חשמל"],
+  "low_level_keywords": ["ציון פסיכומטרי", "בגרות במתמטיקה", "סף קבלה", "תנאי קבלה"]
 }}
 #############################
-Example 2:
+דוגמה 2:
 
-Query: "What are the environmental consequences of deforestation on biodiversity?"
+שאילתה: "כמה נקודות זכות צריך לצבור בקורס מבוא למדעי המחשב?"
 ################
-Output:
+פלט:
 {{
-  "high_level_keywords": ["Environmental consequences", "Deforestation", "Biodiversity loss"],
-  "low_level_keywords": ["Species extinction", "Habitat destruction", "Carbon emissions", "Rainforest", "Ecosystem"]
+  "high_level_keywords": ["נקודות זכות", "קורס חובה", "מדעי המחשב"],
+  "low_level_keywords": ["מבוא למדעי המחשב", "נקודות זכות", "שעות שבועיות", "דרישות קדם"]
 }}
 #############################
-Example 3:
+דוגמה 3:
 
-Query: "What is the role of education in reducing poverty?"
+שאילתה: "האם יש קורסי בחירה בפקולטה למדעי הנתונים?"
 ################
-Output:
+פלט:
 {{
-  "high_level_keywords": ["Education", "Poverty reduction", "Socioeconomic development"],
-  "low_level_keywords": ["School access", "Literacy rates", "Job training", "Income inequality"]
+  "high_level_keywords": ["קורסי בחירה", "מדעי הנתונים", "תכנית לימודים"],
+  "low_level_keywords": ["רשימת קורסים", "נקודות בחירה", "פקולטה", "קטלוג קורסים"]
 }}
 #############################
--Real Data-
+-נתונים אמיתיים-
 ######################
-Query: {query}
+שאילתה: {query}
 ######################
-Output:
+פלט:
 
 """
 
