@@ -77,16 +77,13 @@ os.makedirs(WORKING_DIR, exist_ok=True)
 # Build completion function
 # ----------------------------
 if USE_GGUF:
-    from huggingface_hub import hf_hub_download
-    from llama_cpp import Llama
-
     GGUF_REPO = "dicta-il/dictalm2.0-instruct-GGUF"
     GGUF_FILE = "dictalm2.0-instruct.Q4_K_M.gguf"
     gguf_path = hf_hub_download(repo_id=GGUF_REPO, filename=GGUF_FILE)
 
     llm_cpp = Llama(
         model_path=gguf_path,
-        n_ctx=8192,
+        n_ctx=8192,  # increase if you have RAM: e.g., 32768
         n_threads=int(os.environ.get("OMP_NUM_THREADS", "12")),
         n_batch=1024,
         logits_all=False,
@@ -95,7 +92,9 @@ if USE_GGUF:
 
     _GEN_SEM = asyncio.Semaphore(1)
 
+
     async def llm_complete(prompt: str, **kwargs) -> str:
+        """Return a plain string; normalize llama.cpp dict output."""
         async with _GEN_SEM:
             out = llm_cpp(
                 prompt,
@@ -104,7 +103,12 @@ if USE_GGUF:
                 top_p=1.0,
                 stop=["</s>", "### הוראה:", "### תגובה:"],
             )
-            return out["choices"][0]["text"].strip()
+            # out is a dict -> extract text and ensure string
+            try:
+                return out["choices"][0]["text"].strip()
+            except Exception:
+                return str(out)
+
 else:
     llm_complete = hf_model_complete
 
