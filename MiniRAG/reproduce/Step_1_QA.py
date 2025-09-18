@@ -73,6 +73,52 @@ print("USING WORKING DIR:", WORKING_DIR)
 
 os.makedirs(WORKING_DIR, exist_ok=True)
 
+
+
+
+# add near imports
+from typing import Any, List, Dict
+
+def _stringify_prompt(prompt: Any) -> str:
+    """Accept OpenAI-style messages or plain strings and return a single string for llama.cpp."""
+    if isinstance(prompt, str):
+        return prompt
+    if isinstance(prompt, list):
+        # expect list of {"role": "...", "content": "..."} or just strings
+        parts = []
+        for m in prompt:
+            if isinstance(m, dict):
+                role = m.get("role", "user")
+                content = m.get("content", "")
+                parts.append(f"{role.upper()}: {content}")
+            else:
+                parts.append(str(m))
+        # simple chat-style format; you can switch to your instruct template if you prefer
+        return "\n".join(parts) + "\nASSISTANT:"
+    # fallback
+    return str(prompt)
+
+def _as_text(x: Any) -> str:
+    """Coerce any object to text (handles list outputs for contexts)."""
+    if isinstance(x, str):
+        return x
+    if isinstance(x, list):
+        return "\n".join(map(str, x))
+    if isinstance(x, dict):
+        # common dict shapes
+        if "choices" in x and isinstance(x["choices"], list) and x["choices"]:
+            ch = x["choices"][0]
+            if isinstance(ch, dict) and "text" in ch:
+                return str(ch["text"])
+        return x.get("generated_text") or x.get("text") or str(x)
+    return str(x)
+
+
+
+
+
+
+
 # ----------------------------
 # Build completion function
 # ----------------------------
@@ -99,16 +145,17 @@ if USE_GGUF:
     async def llm_complete(prompt: str, **kwargs) -> str:
         """Return a plain string; normalize llama.cpp dict output."""
         async with _GEN_SEM:
+            prompt_str = _stringify_prompt(prompt)  # <— handle list-of-messages
             out = llm_cpp(
-                prompt,
+                prompt_str,
                 max_tokens=128,
                 temperature=0.0,
                 top_p=1.0,
                 stop=["</s>", "### הוראה:", "### תגובה:"],
             )
-            # out is a dict -> extract text and ensure string
+            # normalize dict → string
             try:
-                return out["choices"][0]["text"].strip()
+                return _as_text(out).strip()
             except Exception:
                 return str(out)
 
@@ -178,14 +225,9 @@ def run_experiment(output_path):
             print("Gold_Answer", Gold_Answer)
 
             try:
-                minirag_context = (
-                    rag.query(QUESTION, param=QueryParam(mode='mini', only_need_context=True))
-                      .replace("\n", "").replace("\r", "")
-                )
-                minirag_answer = (
-                    rag.query(QUESTION, param=QueryParam(mode="mini"))
-                      .replace("\n", "").replace("\r", "")
-                )
+                minirag_context = _as_text(rag.query(QUESTION, param=QueryParam(mode='mini', only_need_context=True))
+                    ).replace("\n", "").replace("\r", "")
+                minirag_answer = _as_text(rag.query(QUESTION, param=QueryParam(mode="mini"))).replace("\n", "").replace("\r", "")
                 print(f'minirag_answer: {minirag_answer}')
 
             except Exception as e:
