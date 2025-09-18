@@ -21,7 +21,7 @@ from transformers import AutoModel, AutoTokenizer
 EMBEDDING_MODEL = "dicta-il/dictabert"
 
 import argparse
-
+import asyncio
 
 def get_args():
     parser = argparse.ArgumentParser(description="MiniRAG")
