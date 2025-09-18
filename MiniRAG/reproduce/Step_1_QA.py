@@ -179,6 +179,8 @@ def run_experiment(output_path):
                     rag.query(QUESTION, param=QueryParam(mode="mini"))
                       .replace("\n", "").replace("\r", "")
                 )
+                print(f'minirag_answer: {minirag_answer}')
+
             except Exception as e:
                 print("Error in minirag_answer", e)
                 minirag_context = ""
@@ -193,6 +195,7 @@ def run_experiment(output_path):
                     rag.query(QUESTION, param=QueryParam(mode="naive"))
                       .replace("\n", "").replace("\r", "")
                 )
+                print(f'naive_answer: {naive_answer}')
             except Exception as e:
                 print("Error in naive_answer", e)
                 naive_context = ""
