@@ -1,13 +1,13 @@
-GRAPH_FIELD_SEP = "<SEP>"
+GRAPH_FIELD_SEP = "<מפריד>"
 
 PROMPTS = {}
 
 PROMPTS["DEFAULT_TUPLE_DELIMITER"] = "<|>"
 PROMPTS["DEFAULT_RECORD_DELIMITER"] = "##"
-PROMPTS["DEFAULT_COMPLETION_DELIMITER"] = "<|COMPLETE|>"
+PROMPTS["DEFAULT_COMPLETION_DELIMITER"] = "<|שלם|>"
 PROMPTS["process_tickers"] = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
 
-PROMPTS["DEFAULT_ENTITY_TYPES"] = ["organization", "person", "location", "event"]
+PROMPTS["DEFAULT_ENTITY_TYPES"] = ["סמסטר", "קורס", "ניקוד", "מגמה", "חובה", "בחירה"]
 
 
 PROMPTS["entity_extraction"] = """-Goal-
@@ -390,24 +390,24 @@ Output:
 
 """
 
-PROMPTS["naive_rag_response"] = """---Role---
+PROMPTS["naive_rag_response"] = """---תפקיד---
 
-You are a helpful assistant responding to questions about documents provided.
+אתה עוזר המסייע בתשובה לשאלות על המסמכים שסופקו.
 
 
----Goal---
+---מטרה---
 
-Generate a response of the target length and format that responds to the user's question, summarizing all information in the input data tables appropriate for the response length and format, and incorporating any relevant general knowledge.
-If you don't know the answer, just say so. Do not make anything up.
-Do not include information where the supporting evidence for it is not provided.
+צור תגובה באורך ובתבנית היעד המגיבה לשאלת המשתמש, מסכמת את כל המידע בטבלאות הנתונים המתאימות לאורך ולתבנית התגובה, ומשלבת כל ידע כללי רלוונטי.
+אם אינך יודע את התשובה, פשוט אמור זאת. אל תמציא שום דבר.
+אל תכלול מידע שהראיות התומכות בו אינן מסופקות.
 
----Target response length and format---
+---אורך ותבנית תגובת היעד---
 
 {response_type}
 
----Documents---
+---מסמכים---
 
 {content_data}
 
-Add sections and commentary to the response as appropriate for the length and format. Style the response in markdown.
+הוסף קטעים והערות לתגובה לפי הצורך לאורך ולתבנית. עצב את התגובה ב-markdown.
 """
