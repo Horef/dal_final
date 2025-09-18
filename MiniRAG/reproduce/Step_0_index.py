@@ -144,7 +144,7 @@ if USE_GGUF:
                 max_tokens=32,
                 temperature=0.0,
                 top_p=1.0,
-                stop=["</s>", "### Instruction:", "### Response:"],
+                stop=["</s>", "### הוראה:", "### תגובה:"],
             )
             return out["choices"][0]["text"].strip()
 
