@@ -262,7 +262,7 @@ def build_chunks_from_txt(txt: str, target_chars=1200, overlap_chars=150,
                           min_chars=200, max_chars=2200, keep_table_as_whole=True) -> List[Dict]:
     return _chunkize_blocks(_iter_blocks(txt), target_chars, overlap_chars, min_chars, max_chars, keep_table_as_whole)
 
-def build_chunks_from_pdf(pdf_path: str, *, extract_fn, rtl=True, two_cols=True,
+def build_chunks_from_pdf(pdf_path: str, *, extract_fn, rtl=False, two_cols=True,
                           max_pages=None, target_chars=1200, overlap_chars=150, min_chars=200,
                           max_chars=2200, keep_table_as_whole=True) -> List[Dict]:
     txt = extract_fn(pdf_path, rtl=rtl, two_cols=two_cols, max_pages=max_pages)
