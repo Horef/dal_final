@@ -30,7 +30,7 @@ def get_args():
     parser.add_argument("--workingdir", type=str, default="./Technion")
     parser.add_argument("--datapath", type=str, default="./dataset/Technion/data/")
     parser.add_argument(
-        "--querypath", type=str, default="./dataset/Technion/qa/query_set.csv"
+        "--querypath", type=str, default="./dataset/Technion/qa/query_set_old.csv"
     )
     args = parser.parse_args()
     return args

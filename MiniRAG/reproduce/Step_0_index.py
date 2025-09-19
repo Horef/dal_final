@@ -35,7 +35,7 @@ def get_args():
     parser.add_argument("--outputpath", type=str, default="./logs/Default_output.csv")
     parser.add_argument("--workingdir", type=str, default="./Technion")
     parser.add_argument("--datapath", type=str, default="./dataset/Technion/data/")
-    parser.add_argument("--querypath", type=str, default="./dataset/Technion/qa/query_set.csv")
+    parser.add_argument("--querypath", type=str, default="./dataset/Technion/qa/query_set_old.csv")
     parser.add_argument("--checkpoints", type=int, default=10,
                         help="Number of checkpoints to save during indexing (default: 10)")
     parser.add_argument("--save", type=int, default=1,
