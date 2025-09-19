@@ -1,27 +1,23 @@
-
 # data_splitter_en.py
 # English-friendly, 2-column-aware splitter for MiniRAG
-# Tailored for academic catalogues/regulations in English, but robust across docs.
-#
-# Compatible with your existing pipeline:
-#   - Works with text_from_pdf.extract_text_from_pdf (preferred) OR its own fallback extractor
-#   - Public API mirrors your Hebrew splitter:
-#       build_chunks_from_txt(text, target_chars=..., overlap_chars=..., min_chars=..., max_chars=..., keep_table_as_whole=True, max_chunks=None)
-#       build_chunks_from_pdf(pdf_path, extract_fn=..., two_cols=True, rtl=False, max_pages=None, ...)
-#       write_chunks_jsonl(chunks, outfile)
-#       write_chunks_txt(chunks, outdir)
-#   - Plus: write_chunks(chunks, outdir, basename='chunks', clean=True) that CLEANS the output folder first
-#
 # CLI:
 #   python data_splitter_en.py INPUT.pdf --two-cols --target 1100 --overlap 150 --min 200 --max 2200 \
 #       --max-chunks 120 --outdir chunks_out --basename catalogue --max-pages 20
-#   The CLI cleans --outdir before writing (removes old chunks).
+#   The CLI cleans --outdir before writing - removes old chunks
 #
 # JSONL schema (compatible):
 #   { "id": "chunk_0001", "section": "Heading", "page_start": 3, "page_end": 4,
 #     "char_count": 1184, "text": "..." }
+# How to run from main example:
+#python main.py /
+#  --raw-data raw_data_path /
+# --processed-data processed_data_path  /
+# --dataset dataset_path  /
+# --two-cols  /
+# --target 1100 --max 2000 --overlap 150 --min 200  /
+# --max-chunks 120 /
 #
-# MIT License (c) 2025
+
 
 from __future__ import annotations
 import re, json, os, shutil
