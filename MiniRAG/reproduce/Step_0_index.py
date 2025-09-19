@@ -79,15 +79,20 @@ os.makedirs(WORKING_DIR, exist_ok=True)
 
 _hf_tokenizer = AutoTokenizer.from_pretrained(HF_LLM, trust_remote_code=False)
 
-_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+use_cuda = torch.cuda.is_available()
+_dtype = torch.float16 if use_cuda else torch.float32
+
+
 _hf_model = AutoModelForCausalLM.from_pretrained(
     HF_LLM,
     torch_dtype=_dtype,
     low_cpu_mem_usage=True,
+    device_map={"": 0} if use_cuda else None,
     trust_remote_code=False,
 )
 
 _hf_model.eval()
+
 # # Fallback ids
 if _hf_tokenizer.pad_token_id is None:
     if _hf_tokenizer.eos_token_id is not None:
@@ -96,6 +101,8 @@ if _hf_tokenizer.pad_token_id is None:
         _hf_tokenizer.add_special_tokens({"pad_token": "[PAD]"})
         _hf_model.resize_token_embeddings(len(_hf_tokenizer))
 
+if use_cuda:
+    torch.cuda.empty_cache()
 
 # # Manual device placement (M60: CC 5.2; torch 1.13.1 works)
 # device_arg = -1
@@ -152,7 +159,7 @@ async def hf_model_complete(prompt: str, **kwargs) -> str:
     """Async wrapper compatible with MiniRAG's awaited LLM interface."""
     gen = _hf_pipe(
         prompt,
-        max_new_tokens=64,
+        max_new_tokens=32,
         do_sample=True,
         temperature=0.2,
         top_p=0.9,
