@@ -39,7 +39,7 @@ latency_ms = st.sidebar.slider("Simulated latency (ms)", 0, 3000, 600, 100)
 # ====== Main ======
 question = st.text_input(
     "Enter your question:",
-    placeholder="For example: How long is the summer semester?",
+    placeholder="For example: What are the prerequisites for Differential Calculus?",
 )
 ask_clicked = st.button("Ask (Demo)", type="primary")
 
