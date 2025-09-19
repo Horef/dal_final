@@ -1,0 +1,8 @@
+am schedule and locations, as well as the seating
+between the rooms. Each student will receive an exam card in
+enrolled in that semester is specified.
+for which the mid exam replace a final exam, and no more than
+one valid mid exam can be given in a course for which there is
+a final exam. Each mid exam shall not exceed two hours and for
+each valid mid exam that is given, there must be a second date
+(Moed B) on which students can take the test.
