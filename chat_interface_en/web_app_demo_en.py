@@ -1,107 +1,69 @@
-"""
-This script creates a Streamlit web application for the Technion University Curriculum Q&A system.
-This file should only be run after the index has been created (and saved) using Step_0_index_backup.py.
-
-In order to run this file, use the command:
-    streamlit run chat_interface_en/web_app_demo_en.py from the root directory of the project.
-"""
-
+# web_app_demo_en.py
+from pathlib import Path
 import streamlit as st
-import argparse
-import pickle
-import os
-import sys
+import time
 
-def get_args():
-    parser = argparse.ArgumentParser(description="MiniRAG (HF-only)")
-    parser.add_argument("--model", type=str, default="PHI",
-                        help="PHI | aya | GLM | MiniCPM | qwen")
-    parser.add_argument("--outputpath", type=str, default="./logs/Default_output.csv")
-    parser.add_argument("--workingdir", type=str, default="./LiHua-World")
-    parser.add_argument("--datapath", type=str, default="./dataset/LiHua-World/data/")
-    parser.add_argument("--querypath", type=str, default="./dataset/LiHua-World/qa/query_set_old.csv")
-    return parser.parse_args()
+# ====== Page setup ======
+st.set_page_config(page_title="Uni-Assistant (Demo)", page_icon="🎓", layout="wide")
 
-args = get_args()
+ASSETS_DIR = Path(__file__).parent
+LOGO_PATH = ASSETS_DIR / "technion_logo.png"
 
-# Use Streamlit's caching to load the model only once.
-@st.cache_resource
-def load_rag_system():
-    """Loads the RAG system."""
-    # Loading the pickled RAG index saved during indexing
-    index_path = os.path.join(args.workingdir, 'checkpoints', 'rag_final.pkl')
-    if not os.path.exists(index_path):
-        st.error(f"Index file not found at {index_path}. Please run Step_0_index_backup.py first.")
-        st.stop()
-    with open(index_path, 'rb') as f:
-        rag = pickle.load(f)
-    return rag
-
-# --- Page Configuration ---
-st.set_page_config(
-    page_title="🎓 Uni‑Assistant",
-    page_icon="🎓",
-    layout="centered"
-)
-
-# --- Custom CSS (LTR, English font) ---
+# Optional: custom CSS (LTR + Inter font)
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-
-body, html, .stApp, .stTextInput, .stButton, .stMarkdown, .stSpinner, .stSuccess {
-    direction: ltr;
-    text-align: left;
-    font-family: 'Inter', sans-serif;
-}
-
-/* Fix for text input placeholder */
-.stTextInput input::placeholder {
-    text-align: left;
-}
-
-/* Fix for spinner alignment */
-.stSpinner > div {
-    justify-content: flex-end;
+html, body, [class*="css"]  {
+  font-family: 'Inter', sans-serif;
+  direction: ltr;
+  text-align: left;
 }
 </style>
 """, unsafe_allow_html=True)
 
-# --- App Content ---
-# Create columns for the header
-col1, col2 = st.columns([1, 4])  # Create a 1:4 ratio for columns
+# ====== Header ======
+col_logo, col_title = st.columns([1, 5], vertical_alignment="center")
+with col_logo:
+    if LOGO_PATH.exists():
+        st.image(LOGO_PATH, width=140)
+with col_title:
+    st.title("Uni-Assistant")
 
-with col1:
-    st.image("chat_interface_en/technion_logo.png", width=100) # Display logo in the smaller column
+st.caption("Ask anything about Technion courses, prerequisites, and study programs. (Demo mode)")
 
-with col2:
-    st.title("🎓 Uni‑Assistant") # Display title in the larger column
+# ====== Sidebar (demo knobs) ======
+st.sidebar.header("Demo Settings")
+top_k = st.sidebar.slider("Top-K retrieved chunks", 1, 20, 5)
+latency_ms = st.sidebar.slider("Simulated latency (ms)", 0, 3000, 600, 100)
 
-st.write("אפשר לשאול כל שאלה על קורסי הטכניון, דרישות קדם ותכנים.")
-
-# Get user input
+# ====== Main ======
 question = st.text_input(
-    "תרשמו את שאלתכם כאן:",
-    placeholder="למשל, מהן דרישות הקדם עבור חשבון דיפרנציאלי?"
+    "Enter your question:",
+    placeholder="For example: What are the prerequisites for Differential Calculus?",
 )
+ask_clicked = st.button("Ask (Demo)", type="primary")
 
-# Handle the question
-if question:
-    with st.spinner("Searching the curriculum..."):
-        # Get the answer from your RAG system
-        try:
-            answer = 'This is just a demo—what did you expect?'
-        except Exception as e:
-            st.error(f"It looks like an error occurred: {e}")
-            st.stop()
+if ask_clicked:
+    if not question.strip():
+        st.warning("Please enter a question.")
+    else:
+        with st.spinner("Thinking…"):
+            time.sleep(latency_ms / 1000.0)
 
-        # Display the answer
-        st.success("Here’s what I found:")
-        st.write(answer)
+        # Stubbed answer + pretend sources
+        st.subheader("Answer")
+        st.write(
+            "In most tracks, Differential Calculus requires a basic mathematics placement or successful completion "
+            "of an introductory math course. For exact rules, consult your program’s handbook."
+        )
 
-        # Optionally, display the sources used
-        # TODO: I am not sure how to use this, need to check the MiniRAG docs
-        # if answer["documents"]:
-        #     with st.expander("Show Sources"):
-        #         for doc in answer["documents"]:
-        #             st.info(doc)
+        st.subheader("Sources (demo)")
+        for i in range(1, top_k + 1):
+            with st.expander(f"Source {i} • score≈{round(1.0 - i*0.07, 2)}"):
+                st.write(
+                    "Excerpt: “…Students must meet the mathematics placement requirement or complete the "
+                    "introductory course prior to enrolling in Differential Calculus…”"
+                )
+                st.code(
+                    '{"course": "Differential Calculus", "document": "Program Handbook 2024–25", "page": %d}' % (i + 3)
+                )
