@@ -1,20 +1,43 @@
 
 # data_splitter_en.py
+# English-friendly, 2-column-aware splitter for MiniRAG
+# Tailored for academic catalogues/regulations in English, but robust across docs.
+#
+# Compatible with your existing pipeline:
+#   - Works with text_from_pdf.extract_text_from_pdf (preferred) OR its own fallback extractor
+#   - Public API mirrors your Hebrew splitter:
+#       build_chunks_from_txt(text, target_chars=..., overlap_chars=..., min_chars=..., max_chars=..., keep_table_as_whole=True, max_chunks=None)
+#       build_chunks_from_pdf(pdf_path, extract_fn=..., two_cols=True, rtl=False, max_pages=None, ...)
+#       write_chunks_jsonl(chunks, outfile)
+#       write_chunks_txt(chunks, outdir)
+#   - Plus: write_chunks(chunks, outdir, basename='chunks', clean=True) that CLEANS the output folder first
+#
+# CLI:
+#   python data_splitter_en.py INPUT.pdf --two-cols --target 1100 --overlap 150 --min 200 --max 2200 \
+#       --max-chunks 120 --outdir chunks_out --basename catalogue --max-pages 20
+#   The CLI cleans --outdir before writing (removes old chunks).
+#
+# JSONL schema (compatible):
+#   { "id": "chunk_0001", "section": "Heading", "page_start": 3, "page_end": 4,
+#     "char_count": 1184, "text": "..." }
+#
+# MIT License (c) 2025
 
 from __future__ import annotations
-import re, json, os
+import re, json, os, shutil
 from typing import List, Dict, Optional, Callable
 
 # --------------------
 # Regexes & heuristics
 # --------------------
 
+# Page delimiter inserted by the extractor
 _PAGE_RE = re.compile(r"^===\s*Page\s+(\d+)\s*===\s*$")
 
-# Tables: tabs, pipes, or multi-space alignment (3+ spaces) → looks columnar
+# Table-ish: tabs, pipes, or multi-space alignment (3+ spaces repeated)
 _TABLEISH_RE = re.compile(r"(?:[^\t]*\t[^\t]*\t[^\t]*)|(?:\S+\s*\|\s*\S+)|(?:\S+(?:\s{3,}\S+){2,})")
 
-# Lists: bullets, roman numerals, alpha/numeric outlines
+# List-ish: bullets, roman numerals, alpha/numeric outlines
 _LISTISH_RE = re.compile(
     r"""^\s*(?:[-\u2022\*\u25CF]               # bullets
           |\(\s*[ivxlcdmIVXLCDM]+\s*\)        # (iv) / (IV)
@@ -26,7 +49,7 @@ _LISTISH_RE = re.compile(
     re.VERBOSE,
 )
 
-# English sentence-ish split (keep colons within sentences)
+# English sentence-ish split
 _SENT_SPLIT_RE = re.compile(r"(?<=[\.!?…])\s+")
 
 # Headings
@@ -35,12 +58,18 @@ _APPENDIX_HEADING_RE = re.compile(r"^\s*Appendix\s+[A-Z][\)\.: -]\s*\S", re.IGNO
 _ROMAN_HEADING_RE = re.compile(r"^\s*[IVXLCDM]+\s+[A-Z][^\n]{1,80}$")  # "III REGULATIONS"
 _ALL_CAPS_LINE_RE = re.compile(r"^[A-Z][A-Z0-9 &/\-,'()]{2,80}$")      # short all-caps headings
 
+_COMMON_TERMS = (
+    "Introduction", "Regulations", "Procedures", "Curriculum", "Semesters",
+    "Admission", "Eligibility", "Credits", "Grades", "Exams", "Appeals",
+    "Degree", "Graduation", "Distinction", "Specializations", "Tracks",
+    "Prerequisites", "Syllabi", "Requirements", "Assessment", "Evaluation",
+)
 
-# Contacts/URLs
+# Contact-ish lines (emails, URLs, phones)
 _CONTACT_RE = re.compile(r"(@|mailto:|tel:|\bhttps?://|\bwww\.)", re.IGNORECASE)
 
 def _normalize_spaces_keep_tabs(s: str) -> str:
-    # Collapse all non-tab whitespace to single spaces; keep tabs so table-ish detection works.
+    # Collapse all non-tab whitespace to single spaces; keep tabs for table detection.
     s = re.sub(r"[^\S\t]+", " ", s)
     return s.strip()
 
@@ -66,6 +95,7 @@ def _is_heading(line: str) -> bool:
     return score >= 3
 
 def _split_paragraph(s: str, soft: int, hard: int) -> List[str]:
+    """Split long paragraphs by sentences, fallback to word-based if a sentence is too long."""
     s = s.strip()
     if len(s) <= hard:
         return [s]
@@ -132,7 +162,7 @@ class Block:
 # Header/footer cleaner
 # --------------------
 
-def _discover_repeating_lines(lines: List[str], min_repeats=3, max_len=100) -> set:
+def _discover_repeating_lines(lines: List[str], min_repeats=4, max_len=80) -> set:
     """Find lines that repeat many times (likely running headers/footers)."""
     from collections import Counter
     c = Counter([ln.strip() for ln in lines if ln.strip() and not _PAGE_RE.match(ln)])
@@ -205,12 +235,12 @@ def _iter_blocks(raw_text: str) -> List[Block]:
     return blocks
 
 # --------------------
-# Chunking
+# Chunking + optional limiting
 # --------------------
 
 def _chunkize_blocks(
     blocks: List[Block],
-    target_chars=1200,
+    target_chars=1100,
     overlap_chars=150,
     min_chars=200,
     max_chars=2200,
@@ -284,16 +314,34 @@ def _chunkize_blocks(
     flush(True)
     return chunks
 
+def _limit_chunks(chunks: List[Dict], max_chunks: int) -> List[Dict]:
+    """Greedy adjacent merges until len(chunks) ≤ max_chunks, preserving order and section labels of first item in each merge."""
+    if max_chunks is None or max_chunks < 1 or len(chunks) <= max_chunks:
+        return chunks
+    merged: List[Dict] = chunks[:]
+    i = 0
+    while len(merged) > max_chunks and i < len(merged)-1:
+        a, b = merged[i], merged[i+1]
+        a["text"] = a["text"].rstrip() + "\n" + b["text"].lstrip()
+        a["char_count"] = len(a["text"])
+        a["page_end"] = b.get("page_end", a["page_end"])
+        del merged[i+1]
+        # step forward cautiously
+        i = min(i+1, len(merged)-2) if len(merged) > max_chunks else i
+    # reassign IDs
+    for j, ch in enumerate(merged, 1):
+        ch["id"] = f"chunk_{j:04d}"
+    return merged
+
 # --------------------
-# PDF extraction (best-effort, optional)
+# PDF extraction (best-effort fallback)
 # --------------------
 
 def _extract_pdf_best_effort(pdf_path: str, rtl: bool=False, two_cols: bool=True, max_pages: Optional[int]=None) -> str:
     """
-    Try PyMuPDF first; if not available, try pdfplumber.
-    Produce text with page markers and 2-column ordering (left→right).
+    Try PyMuPDF (fitz); if not available, try pdfplumber.
+    Output includes "=== Page N ===" markers. Two-column order: left→right (or right→left if rtl=True).
     """
-    # Try PyMuPDF
     try:
         import fitz  # PyMuPDF
         doc = fitz.open(pdf_path)
@@ -309,12 +357,9 @@ def _extract_pdf_best_effort(pdf_path: str, rtl: bool=False, two_cols: bool=True
                 midx = rect.x0 + rect.width / 2.0
                 left  = fitz.Rect(rect.x0, rect.y0, midx, rect.y1)
                 right = fitz.Rect(midx, rect.y0, rect.x1, rect.y1)
-                # Extract left then right as plain text (keeps line breaks)
                 left_text  = page.get_text("text", clip=left) or ""
                 right_text = page.get_text("text", clip=right) or ""
-                # Normalize RTL if needed (not typical for English docs)
                 if rtl:
-                    # naive RTL join: right then left
                     out_lines.extend([ln.rstrip() for ln in right_text.splitlines()])
                     out_lines.extend([ln.rstrip() for ln in left_text.splitlines()])
                 else:
@@ -327,7 +372,6 @@ def _extract_pdf_best_effort(pdf_path: str, rtl: bool=False, two_cols: bool=True
     except Exception:
         pass
 
-    # Try pdfplumber
     try:
         import pdfplumber
         out_lines: List[str] = []
@@ -344,7 +388,6 @@ def _extract_pdf_best_effort(pdf_path: str, rtl: bool=False, two_cols: bool=True
                     left  = page.within_bbox((0, 0, midx, h))
                     right = page.within_bbox((midx, 0, w, h))
                     if rtl:
-                        # right then left
                         rt = (right.extract_text() or "").splitlines()
                         lt = (left.extract_text()  or "").splitlines()
                         out_lines.extend([ln.rstrip() for ln in rt])
@@ -367,14 +410,19 @@ def _extract_pdf_best_effort(pdf_path: str, rtl: bool=False, two_cols: bool=True
 
 def build_chunks_from_txt(
     txt: str,
-    target_chars=1200,
+    target_chars=1100,
     overlap_chars=150,
     min_chars=200,
     max_chars=2200,
-    keep_table_as_whole=True
+    keep_table_as_whole=True,
+    max_chunks: Optional[int]=None,
 ) -> List[Dict]:
+    """Main entry: from raw text (with '=== Page N ===' markers) to chunk dicts."""
     blocks = _iter_blocks(txt)
-    return _chunkize_blocks(blocks, target_chars, overlap_chars, min_chars, max_chars, keep_table_as_whole)
+    chunks = _chunkize_blocks(blocks, target_chars, overlap_chars, min_chars, max_chars, keep_table_as_whole)
+    if max_chunks:
+        chunks = _limit_chunks(chunks, max_chunks=max_chunks)
+    return chunks
 
 def build_chunks_from_pdf(
     pdf_path: str,
@@ -383,21 +431,35 @@ def build_chunks_from_pdf(
     rtl: bool=False,
     two_cols: bool=True,
     max_pages: Optional[int]=None,
-    target_chars=1200,
+    target_chars=1100,
     overlap_chars=150,
     min_chars=200,
     max_chars=2200,
-    keep_table_as_whole=True
+    keep_table_as_whole=True,
+    max_chunks: Optional[int]=None,
 ) -> List[Dict]:
     """
-    If extract_fn is None, uses _extract_pdf_best_effort (PyMuPDF -> pdfplumber).
-    Your extract_fn should accept: (pdf_path, rtl=False, two_cols=True, max_pages=None) and return a raw text string.
+    Uses your provided extract_fn (e.g., text_from_pdf.extract_text_from_pdf). If None, uses fallback extractor.
+    extract_fn signature must be: (pdf_path, two_cols=False, rtl=False, max_pages=None, drop_headers=True) -> str
     """
     if extract_fn is None:
-        txt = _extract_pdf_best_effort(pdf_path, rtl=rtl, two_cols=two_cols, max_pages=max_pages)
+        # try to import your project extractor; fall back if unavailable
+        try:
+            from text_from_pdf import extract_text_from_pdf as _proj_extract
+            txt = _proj_extract(pdf_path, two_cols=two_cols, rtl=rtl, max_pages=max_pages)
+        except Exception:
+            txt = _extract_pdf_best_effort(pdf_path, rtl=rtl, two_cols=two_cols, max_pages=max_pages)
     else:
-        txt = extract_fn(pdf_path, rtl=rtl, two_cols=two_cols, max_pages=max_pages)
-    return build_chunks_from_txt(txt, target_chars, overlap_chars, min_chars, max_chars, keep_table_as_whole)
+        txt = extract_fn(pdf_path, two_cols=two_cols, rtl=rtl, max_pages=max_pages)
+    return build_chunks_from_txt(
+        txt,
+        target_chars=target_chars,
+        overlap_chars=overlap_chars,
+        min_chars=min_chars,
+        max_chars=max_chars,
+        keep_table_as_whole=keep_table_as_whole,
+        max_chunks=max_chunks,
+    )
 
 def write_chunks_jsonl(chunks: List[Dict], outfile: str) -> None:
     with open(outfile, "w", encoding="utf-8") as f:
@@ -409,28 +471,66 @@ def write_chunks_txt(chunks: List[Dict], outdir: str) -> None:
         with open(os.path.join(outdir, f"{ch['id']}.txt"), "w", encoding="utf-8") as f:
             f.write(ch["text"].rstrip() + "\n")
 
+# Optional helper that CLEANS the folder first (for your “remove old chunks” requirement)
+def write_chunks(chunks: List[Dict], outdir: str, basename: str="chunks", clean: bool=True) -> None:
+    if clean and os.path.isdir(outdir):
+        shutil.rmtree(outdir)
+    os.makedirs(outdir, exist_ok=True)
+    # JSONL
+    jsonl_path = os.path.join(outdir, f"{basename}.jsonl")
+    with open(jsonl_path, "w", encoding="utf-8") as f:
+        for ch in chunks: f.write(json.dumps(ch, ensure_ascii=False) + "\n")
+    # Per-chunk text
+    write_chunks_txt(chunks, outdir)
+
 # ---------------
 # CLI (optional)
 # ---------------
 if __name__ == "__main__":
     import argparse
-    ap = argparse.ArgumentParser(description="English data splitter for MiniRAG (2-column aware)")
+    ap = argparse.ArgumentParser(description="English data splitter for MiniRAG (2-column aware, catalogue-friendly)")
     ap.add_argument("pdf", help="Path to PDF")
-    ap.add_argument("--two-cols", action="store_true", default=True, help="Treat pages as two columns")
-    ap.add_argument("--target", type=int, default=1200, help="Target characters per chunk")
+    ap.add_argument("--two-cols", action="store_true", default=True, help="Treat pages as two columns (left→right)")
+    ap.add_argument("--rtl", action="store_true", default=False, help="Right-to-left reading order")
+    ap.add_argument("--target", type=int, default=1100, help="Target characters per chunk (soft)")
     ap.add_argument("--overlap", type=int, default=150, help="Overlap characters between chunks")
     ap.add_argument("--min", dest="min_chars", type=int, default=200, help="Minimum chunk size to flush")
     ap.add_argument("--max", dest="max_chars", type=int, default=2200, help="Hard cap on chunk size")
-    ap.add_argument("-o", "--out", default="chunks.jsonl", help="Output JSONL file")
+    ap.add_argument("--max-chunks", type=int, default=None, help="Upper bound on number of chunks (merges adjacent)")
+    ap.add_argument("--outdir", default="chunks_out", help="Output directory (will be cleaned)")
+    ap.add_argument("--basename", default="chunks", help="Base filename for JSONL")
+    ap.add_argument("--max-pages", type=int, default=None, help="Process only first N pages (debug)")
     args = ap.parse_args()
 
-    chunks = build_chunks_from_pdf(
-        args.pdf,
-        two_cols=args.two_cols,
-        target_chars=args.target,
-        overlap_chars=args.overlap,
-        min_chars=args.min_chars,
-        max_chars=args.max_chars,
-    )
-    write_chunks_jsonl(chunks, args.out)
-    print(f"Wrote {len(chunks)} chunks to {args.out}")
+    # prefer your project extractor if available
+    try:
+        from text_from_pdf import extract_text_from_pdf as _proj_extract
+        chunks = build_chunks_from_pdf(
+            args.pdf,
+            extract_fn=_proj_extract,
+            two_cols=args.two_cols,
+            rtl=args.rtl,
+            target_chars=args.target,
+            overlap_chars=args.overlap,
+            min_chars=args.min_chars,
+            max_chars=args.max_chars,
+            max_pages=args.max_pages,
+            max_chunks=args.max_chunks,
+        )
+    except Exception:
+        chunks = build_chunks_from_pdf(
+            args.pdf,
+            extract_fn=None,  # will use fallback
+            two_cols=args.two_cols,
+            rtl=args.rtl,
+            target_chars=args.target,
+            overlap_chars=args.overlap,
+            min_chars=args.min_chars,
+            max_chars=args.max_chars,
+            max_pages=args.max_pages,
+            max_chunks=args.max_chunks,
+        )
+
+    # Clean outdir and write
+    write_chunks(chunks, args.outdir, basename=args.basename, clean=True)
+    print(f"Wrote {len(chunks)} chunks to {args.outdir} (cleaned). JSONL: {args.basename}.jsonl")
