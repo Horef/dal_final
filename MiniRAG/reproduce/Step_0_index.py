@@ -97,42 +97,59 @@ if _hf_tokenizer.pad_token_id is None:
         _hf_model.resize_token_embeddings(len(_hf_tokenizer))
 
 
-# Manual device placement (M60: CC 5.2; torch 1.13.1 works)
-device_arg = -1
+# # Manual device placement (M60: CC 5.2; torch 1.13.1 works)
+# device_arg = -1
+#
+# if torch.cuda.is_available():
+#     print("CUDA is available")
+#     try:
+#         maj, minr = torch.cuda.get_device_capability(0)
+#         print(f"Detected GPU: {torch.cuda.get_device_name(0)} (capability {maj}.{minr})")
+#
+#         if (maj, minr) >= (5, 2):  # Tesla M60 is 5.2
+#             _hf_model.to("cuda:0")
+#             device_arg = 0
+#             print("Model successfully moved to CUDA:0")
+#         else:
+#             print(f"GPU capability {maj}.{minr} is below required (5.2), using CPU instead")
+#     except Exception as e:
+#         print(f"Error while checking CUDA device: {e}")
+#         device_arg = -1
+# else:
+#     print("CUDA is NOT available, running on CPU")
+#
+# print(f"Final device_arg = {device_arg}")
+
 
 if torch.cuda.is_available():
-    print("CUDA is available")
+    device_str = "cuda:0"
+    device_arg = 0
     try:
         maj, minr = torch.cuda.get_device_capability(0)
         print(f"Detected GPU: {torch.cuda.get_device_name(0)} (capability {maj}.{minr})")
-
-        if (maj, minr) >= (5, 2):  # Tesla M60 is 5.2
-            _hf_model.to("cuda:0")
-            device_arg = 0
-            print("Model successfully moved to CUDA:0")
-        else:
-            print(f"GPU capability {maj}.{minr} is below required (5.2), using CPU instead")
     except Exception as e:
-        print(f"Error while checking CUDA device: {e}")
-        device_arg = -1
+        print(f"GPU info probe failed: {e}")
+    _hf_model.to(device_str)
+    print("Model successfully moved to CUDA:0")
 else:
+    device_str = "cpu"
+    device_arg = -1
     print("CUDA is NOT available, running on CPU")
 
 print(f"Final device_arg = {device_arg}")
+
 
 _hf_pipe = pipeline(
     "text-generation",
     model=_hf_model,
     tokenizer=_hf_tokenizer,
     device=device_arg,
+    return_full_text=False,
 )
 
 
 async def hf_model_complete(prompt: str, **kwargs) -> str:
-    """
-    Async wrapper compatible with MiniRAG's awaited LLM interface.
-    Generates short, deterministic-ish completions for indexing/entity tasks.
-    """
+    """Async wrapper compatible with MiniRAG's awaited LLM interface."""
     gen = _hf_pipe(
         prompt,
         max_new_tokens=64,
@@ -142,11 +159,7 @@ async def hf_model_complete(prompt: str, **kwargs) -> str:
         pad_token_id=_hf_tokenizer.pad_token_id,
         eos_token_id=_hf_tokenizer.eos_token_id,
     )
-    text = gen[0]["generated_text"]
-    # Strip the prompt prefix if the pipeline returns prompt+completion
-    if text.startswith(prompt):
-        text = text[len(prompt):]
-    return text.strip()
+    return gen[0]["generated_text"].strip()
 
 
 # ----------------------------
