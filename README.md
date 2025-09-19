@@ -33,21 +33,6 @@ This project implements a specialized Retrieval-Augmented Generation (RAG) syste
 └── Unprocessed Data/    # Raw PDF documents
 ```
 
-## Current Progress
-
-✅ Completed:
-- Table reading implementation for course information
-- Custom data chunking system
-- Basic chat interface implementation
-- Baseline RAG system integration
-- Initial RAGAS integration
-- Document processing pipeline
-
-🚧 In Progress:
-- Integration with existing MiniRAG (chunker replacement)
-- Question generation in Hebrew
-- External data source integration
-- Multi-faculty data processing
 
 ## Installation & Setup
 
