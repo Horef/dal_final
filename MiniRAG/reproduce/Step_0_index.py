@@ -150,7 +150,6 @@ _hf_pipe = pipeline(
     "text-generation",
     model=_hf_model,
     tokenizer=_hf_tokenizer,
-    device=device_arg,
     return_full_text=False,
 )
 
