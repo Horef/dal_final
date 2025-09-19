@@ -6,6 +6,7 @@ import argparse
 import asyncio
 from typing import List
 import cloudpickle as pickle
+from datetime import datetime
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -29,11 +30,16 @@ from minirag.utils import EmbeddingFunc
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 
 def get_args():
+
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
     parser = argparse.ArgumentParser(description="MiniRAG (HF-only)")
     parser.add_argument("--model", type=str, default="bloomz",
                         help="Only bloomz works at this stage")
     parser.add_argument("--outputpath", type=str, default="./logs/Default_output.csv")
-    parser.add_argument("--workingdir", type=str, default="./Technion")
+    parser.add_argument("--workingdir", type=str,
+                        default=f"./Technion_{timestamp}",
+                        help="Working directory (default includes timestamp)")
     parser.add_argument("--datapath", type=str, default="./dataset/Technion/data/")
     parser.add_argument("--querypath", type=str, default="./dataset/Technion/qa/query_set_old.csv")
     parser.add_argument("--checkpoints", type=int, default=10,
@@ -102,6 +108,9 @@ if _hf_tokenizer.pad_token_id is None:
     else:
         _hf_tokenizer.add_special_tokens({"pad_token": "[PAD]"})
         _hf_model.resize_token_embeddings(len(_hf_tokenizer))
+
+if use_cuda:
+    torch.cuda.empty_cache()
 
 # # Manual device placement (M60: CC 5.2; torch 1.13.1 works)
 # device_arg = -1
