@@ -2,8 +2,15 @@
 # your_token = "INPUT YOUR TOKEN HERE"
 # login(your_token)
 
+import torch
 import sys
 import os
+from transformers import (
+    AutoModel,
+    AutoTokenizer,
+    AutoModelForCausalLM,
+    pipeline,
+)
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -11,10 +18,11 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import csv
 from tqdm import trange
 from minirag import MiniRAG, QueryParam
-from minirag.llm import (
-    hf_model_complete,
-    hf_embed,
-)
+from minirag.llm import hf_embed
+# from minirag.llm import (
+#     hf_model_complete,
+#     hf_embed,
+# )
 from minirag.utils import EmbeddingFunc
 from transformers import AutoModel, AutoTokenizer
 
@@ -65,50 +73,87 @@ print("USING WORKING DIR:", WORKING_DIR)
 
 if not os.path.exists(WORKING_DIR):
     os.mkdir(WORKING_DIR)
+_hf_tokenizer = AutoTokenizer.from_pretrained(LLM_MODEL, trust_remote_code=False)
 
+use_cuda = torch.cuda.is_available()
+_dtype = torch.float16 if use_cuda else torch.float32
 
-from minirag.llm import (
-    hf_model_complete as base_hf_complete,  # rename import
-    hf_embed,
+if use_cuda:
+    torch.cuda.empty_cache()
+
+_hf_model = AutoModelForCausalLM.from_pretrained(
+    LLM_MODEL,
+    torch_dtype=_dtype,
+    low_cpu_mem_usage=True,
+    device_map={"": 0} if use_cuda else None,
+    trust_remote_code=False,
 )
 
-# ---- Add this adapter: always return a STRING to MiniRAG ----
-async def hf_complete_string(prompt: str, **kwargs) -> str:
-    """
-    Wrap the underlying HF completion to guarantee a string.
-    Handles dict/list outputs from pipelines and returns plain text.
-    """
-    res = await base_hf_complete(prompt, **kwargs)
+_hf_model.eval()
 
-    # Already a string
-    if isinstance(res, str):
-        return res
 
-    # Pipeline-style list of dicts
-    if isinstance(res, list) and res and isinstance(res[0], dict):
-        first = res[0]
-        return (
-            first.get("generated_text")
-            or first.get("text")
-            or first.get("content")
-            or ""
-        )
+if _hf_tokenizer.pad_token_id is None:
+    if _hf_tokenizer.eos_token_id is not None:
+        _hf_tokenizer.pad_token = _hf_tokenizer.eos_token
+    else:
+        _hf_tokenizer.add_special_tokens({"pad_token": "[PAD]"})
+        _hf_model.resize_token_embeddings(len(_hf_tokenizer))
 
-    # Dict outputs: pick a sensible text field
-    if isinstance(res, dict):
-        return res.get("generated_text") or res.get("text") or res.get("content") or ""
-
-    # Fallback
-    return str(res)
+if use_cuda:
+    torch.cuda.empty_cache()
 
 
 
+if torch.cuda.is_available():
+    device_str = "cuda:0"
+    device_arg = 0
+    try:
+        maj, minr = torch.cuda.get_device_capability(0)
+        print(f"Detected GPU: {torch.cuda.get_device_name(0)} (capability {maj}.{minr})")
+    except Exception as e:
+        print(f"GPU info probe failed: {e}")
+    _hf_model.to(device_str)
+    print("Model successfully moved to CUDA:0")
+else:
+    device_str = "cpu"
+    device_arg = -1
+    print("CUDA is NOT available, running on CPU")
+
+print(f"Final device_arg = {device_arg}")
 
 
+_hf_pipe = pipeline(
+    "text-generation",
+    model=_hf_model,
+    tokenizer=_hf_tokenizer,
+    return_full_text=False,
+)
+
+
+async def hf_model_complete(prompt: str, **kwargs) -> str:
+    """Async wrapper compatible with MiniRAG's awaited LLM interface."""
+    gen = _hf_pipe(
+        prompt,
+        max_new_tokens=32,
+        do_sample=True,
+        temperature=0.2,
+        top_p=0.9,
+        pad_token_id=_hf_tokenizer.pad_token_id,
+        eos_token_id=_hf_tokenizer.eos_token_id,
+    )
+    return gen[0]["generated_text"].strip()
+
+
+# ----------------------------
+# Build MiniRAG with HF-only stack
+# ----------------------------
+
+_EMB_TOKENIZER = AutoTokenizer.from_pretrained(EMBEDDING_MODEL)
+_EMB_MODEL = AutoModel.from_pretrained(EMBEDDING_MODEL).eval()
 
 rag = MiniRAG(
     working_dir=WORKING_DIR,
-    llm_model_func=hf_complete_string,
+    llm_model_func=hf_model_complete,
     llm_model_max_token_size=200,
     llm_model_name=LLM_MODEL,
     embedding_func=EmbeddingFunc(
@@ -116,18 +161,11 @@ rag = MiniRAG(
         max_token_size=1000,
         func=lambda texts: hf_embed(
             texts,
-            tokenizer=AutoTokenizer.from_pretrained(EMBEDDING_MODEL),
-            embed_model=AutoModel.from_pretrained(EMBEDDING_MODEL),
+            tokenizer=_EMB_TOKENIZER,
+            embed_model=_EMB_MODEL,
         ),
     ),
 )
-
-
-
-
-
-
-
 # Now QA
 QUESTION_LIST = []
 GA_LIST = []
@@ -174,8 +212,7 @@ def run_experiment(output_path):
                     .replace("\n", "")
                     .replace("\r", "")
                 )
-                print(f'minirag_answer: {minirag_answer}')
-
+                print(f'minirag_answer: "{minirag_answer}"')
             except Exception as e:
                 print("Error in minirag_answer", e)
                 minirag_answer = "Error"
@@ -191,7 +228,7 @@ def run_experiment(output_path):
                     .replace("\n", "")
                     .replace("\r", "")
                 )
-                print(f'naive_answer: {naive_answer}')
+                print(f'naive_answer: "{naive_answer}"')
             except Exception as e:
                 print("Error in naive_answer", e)
                 naive_answer = "Error"
