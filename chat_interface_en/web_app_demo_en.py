@@ -7,7 +7,7 @@ st.set_page_config(page_title="Uni-Assistant (Demo)", page_icon="🎓", layout="
 ASSETS_DIR = Path(__file__).parent
 LOGO_PATH = ASSETS_DIR / "technion_logo.png"
 
-# ============== Minimal, professional theme ==============
+# ===================== THEME =====================
 st.markdown("""
 <style>
 /* Page width */
@@ -28,32 +28,20 @@ html, body, [class*="css"] {
 .section { margin-top:16px; }
 .section h3 { margin:0 0 8px 0; font-size:20px; font-weight:700; }
 
-/* Input row */
+/* Inputs */
 .stTextInput > div > div > input { height:44px; border-radius:12px; }
 
-/* Default buttons = white (chips, sidebar, etc.) */
-.stButton > button {
-  border-radius:12px;
-  height:44px;
-  font-weight:600;
-  background:#ffffff;
-  border:1px solid #e5e7eb;
-  color:#111827;
-}
-
-/* Only the Ask button gets coral */
-.ask-wrap .stButton > button {
-  background:#ef4444 !important;
-  border:1px solid #ef4444 !important;
-  color:#ffffff !important;
+/* Default buttons = WHITE (chips, sidebar, etc.) */
+.stButton > button{
+  border-radius:12px; height:44px; font-weight:600;
+  background:#ffffff; border:1px solid #e5e7eb; color:#111827;
 }
 
 /* Example chips — white, wrap nicely */
 .examples { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:10px; }
-.examples .stButton > button {
+.examples .stButton > button{
   height:auto; line-height:1.2; white-space:normal; text-align:center;
-  border-radius:999px;
-  padding:8px 12px;
+  border-radius:999px; padding:8px 12px;
 }
 .examples .stButton > button:hover { background:#f8fafc; }
 
@@ -61,14 +49,14 @@ html, body, [class*="css"] {
 .qa { margin-top:10px; }
 .qa-label { color:#6b7280; font-weight:600; font-size:12px; margin:4px 0; }
 
-/* Sources (original-like) */
-.source-title { font-weight:700; margin:6px 0; }
-.source-box {
+/* Sources */
+.source-title{font-weight:700;margin:6px 0}
+.source-box{
   border:1px solid #eef2f7; border-radius:12px; padding:10px 12px; background:#fcfcfd;
   white-space:pre-wrap; word-break:break-word;
 }
 
-/* Sidebar history buttons: neat, wrapped */
+/* Sidebar history buttons */
 [data-testid="stSidebar"] .stButton > button{
   border:1px solid #e5e7eb; background:#fff; color:#111827;
   border-radius:10px; padding:8px 10px; height:auto; line-height:1.25;
@@ -80,11 +68,39 @@ html, body, [class*="css"] {
 </style>
 """, unsafe_allow_html=True)
 
-# ================== State ==================
+# --- JS: keep ONLY the Ask button coral (even after rerenders) ---
+st.markdown("""
+<script>
+(function(){
+  const APPLY = () => {
+    const root = parent.document;
+    // Look for any button labeled "Ask" or "Ask (Demo)" that is inside our data-ask wrapper
+    const btns = root.querySelectorAll('div[data-ask] button');
+    btns.forEach(b=>{
+      const t = (b.innerText || '').trim();
+      if (t === 'Ask' || t === 'Ask (Demo)') {
+        b.style.background = '#ef4444';
+        b.style.border = '1px solid #ef4444';
+        b.style.color = '#ffffff';
+        b.style.boxShadow = 'none';
+        b.style.borderRadius = '12px';
+        b.style.height = '44px';
+        b.style.fontWeight = '600';
+      }
+    });
+  };
+  // Apply now and on any Streamlit re-render
+  APPLY();
+  new MutationObserver(APPLY).observe(parent.document.body, {subtree:true, childList:true});
+})();
+</script>
+""", unsafe_allow_html=True)
+
+# ===================== STATE =====================
 if "question" not in st.session_state:
     st.session_state.question = ""
 if "history" not in st.session_state:
-    st.session_state.history = []   # [{q,a,sources}]
+    st.session_state.history = []    # [{q,a,sources}]
 
 def set_example(q: str):
     st.session_state.question = q
@@ -92,7 +108,7 @@ def set_example(q: str):
 def load_from_history(idx: int):
     st.session_state.question = st.session_state.history[idx]["q"]
 
-# ================== Sidebar: History ==================
+# ===================== SIDEBAR: HISTORY =====================
 st.sidebar.header("History")
 if st.session_state.history:
     for i, turn in enumerate(reversed(st.session_state.history)):
@@ -105,13 +121,12 @@ if st.sidebar.button("Clear history", use_container_width=True):
     st.session_state.history = []
 st.sidebar.markdown('</div>', unsafe_allow_html=True)
 
-# ================== Header ==================
+# ===================== HEADER =====================
 st.markdown('<div class="header">', unsafe_allow_html=True)
 col1, col2 = st.columns([0.15, 0.85])
 with col1:
     st.markdown('<div class="logo">', unsafe_allow_html=True)
-    if LOGO_PATH.exists():
-        st.image(str(LOGO_PATH))
+    if LOGO_PATH.exists(): st.image(str(LOGO_PATH))
     st.markdown('</div>', unsafe_allow_html=True)
 with col2:
     st.markdown(
@@ -121,7 +136,7 @@ with col2:
     )
 st.markdown('</div>', unsafe_allow_html=True)
 
-# ================== Ask ==================
+# ===================== ASK =====================
 st.markdown('<div class="section">', unsafe_allow_html=True)
 st.markdown('<h3>Enter your question</h3>', unsafe_allow_html=True)
 
@@ -134,8 +149,9 @@ with left:
         label_visibility="collapsed",
     )
 with right:
-    st.markdown('<div class="ask-wrap">', unsafe_allow_html=True)
-    ask_clicked = st.button("Ask (Demo)", use_container_width=True, key="ask_btn")
+    # The data-ask wrapper is the selector used by the JS above
+    st.markdown('<div data-ask class="ask-wrap">', unsafe_allow_html=True)
+    ask_clicked = st.button("Ask (Demo)", type="primary", use_container_width=True, key="ask_btn_demo")
     st.markdown('</div>', unsafe_allow_html=True)
 
 # Example chips (white)
@@ -149,7 +165,7 @@ for i, ex in enumerate([
 st.markdown('</div>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)  # /section
 
-# ================== Demo backend ==================
+# ===================== DEMO BACKEND =====================
 if ask_clicked and st.session_state.question.strip():
     time.sleep(0.25)
     q = st.session_state.question.strip()
@@ -178,7 +194,7 @@ if ask_clicked and st.session_state.question.strip():
     ]
     st.session_state.history.append({"q": q, "a": a, "sources": sources})
 
-# ================== Results ==================
+# ===================== RESULTS =====================
 if st.session_state.history:
     turn = st.session_state.history[-1]
 
