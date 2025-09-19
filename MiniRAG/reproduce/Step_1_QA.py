@@ -34,7 +34,7 @@ import argparse
 def get_args():
     parser = argparse.ArgumentParser(description="MiniRAG")
     parser.add_argument("--model", type=str, default="bloomz")
-    parser.add_argument("--outputpath", type=str, default="./logs/Default_output.csv")
+    parser.add_argument("--outputpath", type=str, default="./logs/qa_output.csv")
     parser.add_argument("--workingdir", type=str, default="./Technion")
     parser.add_argument("--datapath", type=str, default="./dataset/Technion/data/")
     parser.add_argument(
@@ -190,7 +190,7 @@ def run_experiment(output_path):
     print("row_count", row_count)
 
     with open(output_path, mode="a", newline="", encoding="utf-8") as log_file:
-        writer = csv.writer(log_file)
+        writer = csv.writer(log_file, delimiter="@")
         if row_count == 0:
             writer.writerow(headers)
 
