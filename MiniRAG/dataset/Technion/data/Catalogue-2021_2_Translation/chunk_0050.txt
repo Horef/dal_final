@@ -1,0 +1,3 @@
+Students are
+expected to complete the course, take an exam in the course and
+receive a grade. Students who successfully pass a course, will

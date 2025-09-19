@@ -1,0 +1,3 @@
+ll not exceed two hours and for
+each valid mid exam that is given, there must be a second date
+(Moed B) on which students can take the test.

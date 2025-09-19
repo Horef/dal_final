@@ -1,0 +1,6 @@
+A. Prerequisites
+A prerequisite is a course that must be completed (and passed)
+prior to enrolling in the course in question.
+Registration to the
+course will not be denied if the prerequisite requirement is not
+fulfilled.

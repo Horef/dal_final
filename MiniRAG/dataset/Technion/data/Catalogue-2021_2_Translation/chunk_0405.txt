@@ -1,0 +1,6 @@
+peat courses in which the grade
+earned was less than 65, the extent of prior courses that need to
+be completed, and the duration of studies.
+Students who return
+to their studies after a prolonged break (over 3 years) will have
+a plan determined for them regarding courses that need to be

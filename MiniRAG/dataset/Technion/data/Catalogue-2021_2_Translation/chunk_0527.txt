@@ -1,0 +1,4 @@
+(“American” style questions) should have at least three
+exam versions. In other words, there must be at least three
+exam forms that will have the questions and/or answer
+choices appear in different orders.

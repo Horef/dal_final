@@ -1,0 +1,4 @@
+sics, biology,
+humanities, and computer science).
+The courses that are offered to all units within the Technion are
+specified in Appendix C.

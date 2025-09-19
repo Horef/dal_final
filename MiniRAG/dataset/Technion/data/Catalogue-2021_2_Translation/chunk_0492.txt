@@ -1,0 +1,4 @@
+, a unit can choose some of the courses
+from the baskets of natural sciences and physics, and some of
+the courses from chemistry or biology.
+6. Within the framework of general studies, special divisions

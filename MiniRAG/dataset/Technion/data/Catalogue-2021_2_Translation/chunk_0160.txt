@@ -1,0 +1,4 @@
+vail.
+If the student passes
+the course, the number of credits that he/she will earn will be in
+accordance with the most recent course taken.

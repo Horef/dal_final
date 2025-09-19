@@ -1,0 +1,6 @@
+ebrew must pass a Hebrew placement exam.
+A minimum
+level of knowledge in Hebrew is necessary in order to be
+accepted into the Technion -113.
+The different placement levels are: Hebrew 3 or Exempt (which
+does not grant any credit points).

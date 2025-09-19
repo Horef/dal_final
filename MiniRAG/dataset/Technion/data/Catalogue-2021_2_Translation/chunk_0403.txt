@@ -1,0 +1,3 @@
+from their studies at the
+Technion, and may specify an agreement stating that
+completion of these courses will serve as additional condition
