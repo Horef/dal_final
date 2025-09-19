@@ -134,7 +134,9 @@ Given the query, list both the answer-type keywords and the low-level keywords (
 
 ---Instructions---
 - Output the keywords in JSON format.
-- The JSON should have two keys: "answer_type_keywords" for the types of the answer and "entities_from_query" for specific entities or details.
+- The JSON should have two keys: 
+  - "answer_type_keywords" for the types of the answer.
+  -  "entities_from_query" for specific entities or details.
 - List no more than 3 answer_type_keywords, with the most likely one first.
 
 ######################
