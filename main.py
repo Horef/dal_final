@@ -1,7 +1,7 @@
 
 import os
 from text_from_pdf import extract_text_from_pdf
-from data_splitter import build_chunks_from_txt, write_chunks_jsonl, write_chunks_txt
+from data_splitter_hebrew import build_chunks_from_txt, write_chunks_jsonl, write_chunks_txt
 import shutil
 
 
