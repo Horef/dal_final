@@ -67,33 +67,39 @@ if not os.path.exists(WORKING_DIR):
     os.mkdir(WORKING_DIR)
 
 
-from minirag.llm import hf_model_complete as base_hf_complete
+from minirag.llm import (
+    hf_model_complete as base_hf_complete,  # rename import
+    hf_embed,
+)
 
-async def hf_complete_adapter(prompt: str, **kwargs):
+# ---- Add this adapter: always return a STRING to MiniRAG ----
+async def hf_complete_string(prompt: str, **kwargs) -> str:
     """
-    Normalize outputs so MiniRAG always sees a dict with 'generated_text'.
-    Works whether the underlying function returns a str, dict, or list.
+    Wrap the underlying HF completion to guarantee a string.
+    Handles dict/list outputs from pipelines and returns plain text.
     """
     res = await base_hf_complete(prompt, **kwargs)
 
-    # Already a dict with text?
-    if isinstance(res, dict):
-        if "generated_text" in res or "content" in res or "text" in res:
-            return res
-        # normalize other dict shapes to our expected key
-        txt = res.get("content") or res.get("text") or ""
-        return {"generated_text": txt}
+    # Already a string
+    if isinstance(res, str):
+        return res
 
-    # Pipeline-style list of dicts?
+    # Pipeline-style list of dicts
     if isinstance(res, list) and res and isinstance(res[0], dict):
         first = res[0]
-        txt = first.get("generated_text") or first.get("text") or first.get("content") or ""
-        return {"generated_text": txt}
+        return (
+            first.get("generated_text")
+            or first.get("text")
+            or first.get("content")
+            or ""
+        )
 
-    # Plain string → wrap
-    return {"generated_text": str(res)}
+    # Dict outputs: pick a sensible text field
+    if isinstance(res, dict):
+        return res.get("generated_text") or res.get("text") or res.get("content") or ""
 
-
+    # Fallback
+    return str(res)
 
 
 
@@ -102,7 +108,7 @@ async def hf_complete_adapter(prompt: str, **kwargs):
 
 rag = MiniRAG(
     working_dir=WORKING_DIR,
-    llm_model_func=hf_complete_adapter,
+    llm_model_func=hf_complete_string,
     llm_model_max_token_size=200,
     llm_model_name=LLM_MODEL,
     embedding_func=EmbeddingFunc(
