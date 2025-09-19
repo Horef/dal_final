@@ -134,7 +134,7 @@ async def hf_model_complete(prompt: str, **kwargs) -> str:
     """Async wrapper compatible with MiniRAG's awaited LLM interface."""
     gen = _hf_pipe(
         prompt,
-        max_new_tokens=32,
+        max_new_tokens=500,
         do_sample=True,
         temperature=0.2,
         top_p=0.9,
