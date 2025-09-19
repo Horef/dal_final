@@ -1,4 +1,0 @@
-student’s weighted cumulative
-average. There are a small number of courses in which the
-grading system is binary --pass/fail. A passing grade entitles
-cumulative average. A student who is registered for a course but

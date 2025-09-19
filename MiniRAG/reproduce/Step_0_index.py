@@ -199,29 +199,41 @@ def main():
         print(f"No .txt files found under: {DATA_PATH}")
         return
 
+    if args.checkpoints <= 0 or total <= 1:
+        step = None
+    else:
+        # spread ~args.checkpoints checkpoints across 'total' items
+        step = max(1, total // args.checkpoints)
+
+    if args.save:
+        os.makedirs(os.path.join(WORKING_DIR, "checkpoints"), exist_ok=True)
+
     for idx, chunk_path in enumerate(chunks, start=1):
         print(f"{idx}/{total}  {chunk_path}")
-        if args.checkpoints > 1 and (idx % (total // args.checkpoints) == 0 or idx == total):
-            ch_id += 1
-            if args.save:
-                print(f"--- Saving index checkpoint #{ch_id} ---")
-                # saving the checkpoint using pickle
-                with open(os.path.join(WORKING_DIR, f'checkpoints/rag_ch_{ch_id}.pkl'), 'wb') as f:
-                    pickle.dump(rag, f)
-                with open(os.path.join(WORKING_DIR, 'checkpoints/rag_final.pkl'), 'wb') as f:
-                    pickle.dump(rag, f)
-                print(f"--- Checkpoint #{ch_id} saved ---")
 
+        # Insert content
         with open(chunk_path, "r", encoding="utf-8", errors="ignore") as f:
             rag.insert(f.read())
 
-    if args.save:
-        print("--- Saving final index ---")
-        with open(os.path.join(WORKING_DIR, 'checkpoints/rag_final.pkl'), 'wb') as f:
-            pickle.dump(rag, f)
-        print("--- Final index saved ---")
+        # Periodic checkpointing
+        if args.save:
+            if step is None:
+                do_checkpoint = (idx == total)
+            else:
+                do_checkpoint = (idx % step == 0) or (idx == total)
+
+            if do_checkpoint:
+                ch_id += 1
+                print(f"--- Saving index checkpoint #{ch_id} ---")
+                with open(os.path.join(WORKING_DIR, f"checkpoints/rag_ch_{ch_id}.pkl"), "wb") as f:
+                    pickle.dump(rag, f)
+                with open(os.path.join(WORKING_DIR, "checkpoints/rag_final.pkl"), "wb") as f:
+                    pickle.dump(rag, f)
+                print(f"--- Checkpoint #{ch_id} saved ---")
+
     print("INFO: Document processing pipeline completed")
     print("INFO: If entity extraction is enabled in MiniRAG, it will run automatically.")
+
 
 
 if __name__ == "__main__":

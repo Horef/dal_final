@@ -1,2 +1,0 @@
-academic units. Each unit has either one or several study
-the unit with which they are affiliated. In addition, the table
