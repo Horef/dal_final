@@ -1469,4 +1469,5 @@ async def minirag_query(  # MiniRAG
         system_prompt=sys_prompt,
     )
 
+    print("Final response:", response)
     return response
