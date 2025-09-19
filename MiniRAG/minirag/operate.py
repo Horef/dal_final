@@ -1424,6 +1424,7 @@ async def minirag_query(  # MiniRAG
         entities_from_query = keywords_data.get("entities_from_query", [])[:5]
 
     except json.JSONDecodeError:
+        print("Initial JSON parsing failed, attempting to clean the result.")
         try:
             result = (
                 result.replace(kw_prompt[:-1], "")
@@ -1441,6 +1442,7 @@ async def minirag_query(  # MiniRAG
             print(f"JSON parsing error: {e}")
             return PROMPTS["fail_response"]
 
+    print("Building context with extracted keywords and entities...")
     context = await _build_mini_query_context(
         entities_from_query,
         type_keywords,
