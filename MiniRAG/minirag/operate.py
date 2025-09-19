@@ -1458,6 +1458,8 @@ async def minirag_query(  # MiniRAG
     )
 
     if query_param.only_need_context:
+        print("Only context needed, returning context.")
+        print("Context:", context)
         return context
     if context is None:
         return PROMPTS["fail_response"]
