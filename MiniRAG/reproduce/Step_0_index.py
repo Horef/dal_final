@@ -1,5 +1,3 @@
-
-
 import os
 import sys
 import argparse
@@ -7,6 +5,8 @@ import asyncio
 from typing import List
 import cloudpickle as pickle
 from datetime import datetime
+from pathlib import Path
+import shutil
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -29,17 +29,58 @@ from minirag.utils import EmbeddingFunc
 
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 
-def get_args():
 
+def archive_if_exists(base_dir: Path) -> Path:
+    """
+    If base_dir exists and is non-empty:
+      1) copy its contents to a timestamped backup folder (sibling)
+      2) clear base_dir so it is ready for fresh outputs
+    Returns the backup folder path if created, else None.
+    """
+    if not base_dir.exists():
+        base_dir.mkdir(parents=True, exist_ok=True)
+        return None
+
+    # Check non-empty
+    try:
+        non_empty = any(base_dir.iterdir())
+    except FileNotFoundError:
+        base_dir.mkdir(parents=True, exist_ok=True)
+        return None
+
+    if not non_empty:
+        return None
+
+    # Create backup folder
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    backup_dir = base_dir.parent / f"{base_dir.name}_{timestamp}"
+    backup_dir.mkdir(parents=True, exist_ok=False)
 
+    # Copy contents (files and subdirs) into backup_dir
+    for entry in base_dir.iterdir():
+        src = entry
+        dst = backup_dir / entry.name
+        if entry.is_dir():
+            shutil.copytree(src, dst)
+        else:
+            shutil.copy2(src, dst)
+
+    # Clear original directory to start fresh
+    for entry in base_dir.iterdir():
+        if entry.is_dir():
+            shutil.rmtree(entry)
+        else:
+            entry.unlink()
+
+    return backup_dir
+
+def get_args():
     parser = argparse.ArgumentParser(description="MiniRAG (HF-only)")
     parser.add_argument("--model", type=str, default="bloomz",
                         help="Only bloomz works at this stage")
     parser.add_argument("--outputpath", type=str, default="./logs/Default_output.csv")
-    parser.add_argument("--workingdir", type=str,
-                        default=f"./Technion_{timestamp}",
-                        help="Working directory (default includes timestamp)")
+    parser.add_argument("--workingdir", type=str, default="./Technion",
+                        help="Working directory; if non-empty, it will be archived to a timestamped sibling and then cleared.")
     parser.add_argument("--datapath", type=str, default="./dataset/Technion/data/")
     parser.add_argument("--querypath", type=str, default="./dataset/Technion/qa/query_set_old.csv")
     parser.add_argument("--checkpoints", type=int, default=10,
@@ -48,10 +89,19 @@ def get_args():
                         help="Whether to save the index after processing (1 = yes, 0 = no; default: 1)")
     return parser.parse_args()
 
-
-
-
 args = get_args()
+
+# Prepare working directory (archive if needed)
+working_dir = Path(args.workingdir)
+backup = archive_if_exists(working_dir)
+if backup:
+    print(f"Archived previous contents to: {backup}")
+print(f"Working directory ready: {working_dir.resolve()}")
+
+# ----------------------------
+# Model selection
+# ----------------------------
+
 
 if args.model == "bloomz":
     HF_LLM = "bigscience/bloomz-560m"          # instruction-tuned, multilingual (but no Hebrew)
