@@ -66,10 +66,43 @@ print("USING WORKING DIR:", WORKING_DIR)
 if not os.path.exists(WORKING_DIR):
     os.mkdir(WORKING_DIR)
 
+
+from minirag.llm import hf_model_complete as base_hf_complete
+
+async def hf_complete_adapter(prompt: str, **kwargs):
+    """
+    Normalize outputs so MiniRAG always sees a dict with 'generated_text'.
+    Works whether the underlying function returns a str, dict, or list.
+    """
+    res = await base_hf_complete(prompt, **kwargs)
+
+    # Already a dict with text?
+    if isinstance(res, dict):
+        if "generated_text" in res or "content" in res or "text" in res:
+            return res
+        # normalize other dict shapes to our expected key
+        txt = res.get("content") or res.get("text") or ""
+        return {"generated_text": txt}
+
+    # Pipeline-style list of dicts?
+    if isinstance(res, list) and res and isinstance(res[0], dict):
+        first = res[0]
+        txt = first.get("generated_text") or first.get("text") or first.get("content") or ""
+        return {"generated_text": txt}
+
+    # Plain string → wrap
+    return {"generated_text": str(res)}
+
+
+
+
+
+
+
+
 rag = MiniRAG(
     working_dir=WORKING_DIR,
-    llm_model_func=hf_model_complete,
-    # llm_model_func=gpt_4o_mini_complete,
+    llm_model_func=hf_complete_adapter,
     llm_model_max_token_size=200,
     llm_model_name=LLM_MODEL,
     embedding_func=EmbeddingFunc(
@@ -82,6 +115,12 @@ rag = MiniRAG(
         ),
     ),
 )
+
+
+
+
+
+
 
 # Now QA
 QUESTION_LIST = []
@@ -129,6 +168,8 @@ def run_experiment(output_path):
                     .replace("\n", "")
                     .replace("\r", "")
                 )
+                print(f'minirag_answer: {minirag_answer}')
+
             except Exception as e:
                 print("Error in minirag_answer", e)
                 minirag_answer = "Error"
@@ -144,6 +185,7 @@ def run_experiment(output_path):
                     .replace("\n", "")
                     .replace("\r", "")
                 )
+                print(f'naive_answer: {naive_answer}')
             except Exception as e:
                 print("Error in naive_answer", e)
                 naive_answer = "Error"
