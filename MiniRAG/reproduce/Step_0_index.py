@@ -259,6 +259,9 @@ def main():
         # spread ~args.checkpoints checkpoints across 'total' items
         step = max(1, total // args.checkpoints)
 
+    # cleaning the checkpoints folder in case it exists
+    if os.path.exists(os.path.join(WORKING_DIR, "checkpoints")):
+        shutil.rmtree(os.path.join(WORKING_DIR, "checkpoints"))
     if args.save:
         os.makedirs(os.path.join(WORKING_DIR, "checkpoints"), exist_ok=True)
 

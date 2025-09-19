@@ -177,6 +177,10 @@ with open(QUERY_PATH, mode="r", encoding="utf-8") as question_file:
 
 
 def run_experiment(output_path):
+    # cleaning the output file
+    if os.path.exists(output_path):
+        os.remove(output_path)
+
     headers = ["Question", "Gold Answer", "minirag_context", "minirag", "naive_context", "naive"]
 
     q_already = []

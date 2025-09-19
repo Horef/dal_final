@@ -1415,7 +1415,7 @@ async def minirag_query(  # MiniRAG
     TYPE_POOL, TYPE_POOL_w_CASE = await knowledge_graph_inst.get_types()
     kw_prompt = kw_prompt_temp.format(query=query, TYPE_POOL=TYPE_POOL)
     result = await use_model_func(kw_prompt)
-    print("Keywords extraction result:", result)
+    # print("Keywords extraction result:", result)
 
     try:
         keywords_data = json_repair.loads(result)
@@ -1424,7 +1424,7 @@ async def minirag_query(  # MiniRAG
         entities_from_query = keywords_data.get("entities_from_query", [])[:5]
 
     except json.JSONDecodeError:
-        print("Initial JSON parsing failed, attempting to clean the result.")
+        # print("Initial JSON parsing failed, attempting to clean the result.")
         try:
             result = (
                 result.replace(kw_prompt[:-1], "")
@@ -1442,7 +1442,7 @@ async def minirag_query(  # MiniRAG
             print(f"JSON parsing error: {e}")
             return PROMPTS["fail_response"]
 
-    print("Building context with extracted keywords and entities...")
+    # print("Building context with extracted keywords and entities...")
     context = await _build_mini_query_context(
         entities_from_query,
         type_keywords,
@@ -1458,8 +1458,8 @@ async def minirag_query(  # MiniRAG
     )
 
     if query_param.only_need_context:
-        print("Only context needed, returning context.")
-        print("Context:", context)
+        # print("Only context needed, returning context.")
+        # print("Context:", context)
         return context
     if context is None:
         return PROMPTS["fail_response"]
@@ -1473,5 +1473,5 @@ async def minirag_query(  # MiniRAG
         system_prompt=sys_prompt,
     )
 
-    print("Final response:", response)
+    # print("Final response:", response)
     return response
