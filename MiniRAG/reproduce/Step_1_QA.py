@@ -6,7 +6,7 @@ import sys
 import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-os.environ.setdefault("OMP_NUM_THREADS", "12")
+
 
 import csv
 from tqdm import trange
@@ -18,14 +18,14 @@ from minirag.llm import (
 from minirag.utils import EmbeddingFunc
 from transformers import AutoModel, AutoTokenizer
 
-EMBEDDING_MODEL = "dicta-il/dictabert"
+EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 
 import argparse
-import asyncio
+
 
 def get_args():
     parser = argparse.ArgumentParser(description="MiniRAG")
-    parser.add_argument("--model", type=str, default="dictalm")
+    parser.add_argument("--model", type=str, default="bloomz")
     parser.add_argument("--outputpath", type=str, default="./logs/Default_output.csv")
     parser.add_argument("--workingdir", type=str, default="./Technion")
     parser.add_argument("--datapath", type=str, default="./dataset/Technion/data/")
@@ -39,155 +39,49 @@ def get_args():
 args = get_args()
 
 
-
-if args.model == "dictalm":
-    LLM_MODEL = "dicta-il/dictalm2.0-instruct-GGUF"
-# elif args.model == "dictalm_no_gguf":
-#     LLM_MODEL = "dicta-il/dictalm2.0-instruct"
-# elif args.model == "neo":
-#     LLM_MODEL = "Norod78/hebrew-gpt_neo-small"
-# elif args.model == "bloom1":
-#     LLM_MODEL = "bigscience/bloom-1b1"
-# elif args.model == "GLM":
-#     LLM_MODEL = "THUDM/glm-edge-1.5b-chat"
-# elif args.model == "MiniCPM":
-#     LLM_MODEL = "openbmb/MiniCPM3-4B"
-# elif args.model == "qwen":
-#     LLM_MODEL = "Qwen/Qwen2.5-0.5B-Instruct"
+if args.model == "bloomz":
+    LLM_MODEL = "bigscience/bloomz-560m"
+elif args.model == "neo":
+    HF_LLM = "Norod78/hebrew-gpt_neo-small"
+elif args.model == "bloom1":
+    LLM_MODEL = "bigscience/bloom-1b1"
+elif args.model == "GLM":
+    LLM_MODEL = "THUDM/glm-edge-1.5b-chat"
+elif args.model == "MiniCPM":
+    LLM_MODEL = "openbmb/MiniCPM3-4B"
+elif args.model == "qwen":
+    LLM_MODEL = "Qwen/Qwen2.5-3B-Instruct"
 else:
     print("Invalid model name")
     exit(1)
-
-
-USE_GGUF = LLM_MODEL.lower().endswith("-gguf")
-
 
 WORKING_DIR = args.workingdir
 DATA_PATH = args.datapath
 QUERY_PATH = args.querypath
 OUTPUT_PATH = args.outputpath
-
 print("USING LLM:", LLM_MODEL)
 print("USING WORKING DIR:", WORKING_DIR)
 
 
-os.makedirs(WORKING_DIR, exist_ok=True)
-
-
-
-
-# add near imports
-from typing import Any, List, Dict
-
-def _stringify_prompt(prompt: Any) -> str:
-    """Accept OpenAI-style messages or plain strings and return a single string for llama.cpp."""
-    if isinstance(prompt, str):
-        return prompt
-    if isinstance(prompt, list):
-        # expect list of {"role": "...", "content": "..."} or just strings
-        parts = []
-        for m in prompt:
-            if isinstance(m, dict):
-                role = m.get("role", "user")
-                content = m.get("content", "")
-                parts.append(f"{role.upper()}: {content}")
-            else:
-                parts.append(str(m))
-        # simple chat-style format; you can switch to your instruct template if you prefer
-        return "\n".join(parts) + "\nASSISTANT:"
-    # fallback
-    return str(prompt)
-
-def _as_text(x: Any) -> str:
-    """Coerce any object to text (handles list outputs for contexts)."""
-    if isinstance(x, str):
-        return x
-    if isinstance(x, list):
-        return "\n".join(map(str, x))
-    if isinstance(x, dict):
-        # common dict shapes
-        if "choices" in x and isinstance(x["choices"], list) and x["choices"]:
-            ch = x["choices"][0]
-            if isinstance(ch, dict) and "text" in ch:
-                return str(ch["text"])
-        return x.get("generated_text") or x.get("text") or str(x)
-    return str(x)
-
-
-
-
-
-
-
-# ----------------------------
-# Build completion function
-# ----------------------------
-if USE_GGUF:
-    from huggingface_hub import hf_hub_download
-    from llama_cpp import Llama
-
-    GGUF_REPO = "dicta-il/dictalm2.0-instruct-GGUF"
-    GGUF_FILE = "dictalm2.0-instruct.Q4_K_M.gguf"
-    gguf_path = hf_hub_download(repo_id=GGUF_REPO, filename=GGUF_FILE)
-
-    llm_cpp = Llama(
-        model_path=gguf_path,
-        n_ctx=8192,  # increase if you have RAM: e.g., 32768
-        n_threads=int(os.environ.get("OMP_NUM_THREADS", "12")),
-        n_batch=1024,
-        logits_all=False,
-        verbose=False,
-    )
-
-    _GEN_SEM = asyncio.Semaphore(1)
-
-
-    async def llm_complete(prompt: str, **kwargs) -> str:
-        """Return a plain string; normalize llama.cpp dict output."""
-        async with _GEN_SEM:
-            prompt_str = _stringify_prompt(prompt)  # <— handle list-of-messages
-            out = llm_cpp(
-                prompt_str,
-                max_tokens=128,
-                temperature=0.0,
-                top_p=1.0,
-                stop=["</s>", "### הוראה:", "### תגובה:"],
-            )
-            # normalize dict → string
-            try:
-                return _as_text(out).strip()
-            except Exception:
-                return str(out)
-
-else:
-    llm_complete = hf_model_complete
-
-
-# ----------------------------
-# Preload DictaBERT once (correct dims)
-# ----------------------------
-_EMB_TOKENIZER = AutoTokenizer.from_pretrained(EMBEDDING_MODEL)
-_EMB_MODEL = AutoModel.from_pretrained(EMBEDDING_MODEL)
-_EMB_MODEL.to("cpu").eval()
+if not os.path.exists(WORKING_DIR):
+    os.mkdir(WORKING_DIR)
 
 rag = MiniRAG(
     working_dir=WORKING_DIR,
-    llm_model_func=llm_complete,
+    llm_model_func=hf_model_complete,
+    # llm_model_func=gpt_4o_mini_complete,
     llm_model_max_token_size=200,
     llm_model_name=LLM_MODEL,
     embedding_func=EmbeddingFunc(
-        embedding_dim=768,  # DictaBERT is 768-dim
-        max_token_size=512,
+        embedding_dim=384,
+        max_token_size=1000,
         func=lambda texts: hf_embed(
             texts,
-            tokenizer=_EMB_TOKENIZER,
-            embed_model=_EMB_MODEL,
+            tokenizer=AutoTokenizer.from_pretrained(EMBEDDING_MODEL),
+            embed_model=AutoModel.from_pretrained(EMBEDDING_MODEL),
         ),
     ),
 )
-
-
-
 
 # Now QA
 QUESTION_LIST = []
@@ -217,7 +111,7 @@ def run_experiment(output_path):
         if row_count == 0:
             writer.writerow(headers)
 
-        for QUESTIONid in trange(row_count, len(QUESTION_LIST)):
+        for QUESTIONid in trange(row_count, len(QUESTION_LIST)):  #
             QUESTION = QUESTION_LIST[QUESTIONid]
             Gold_Answer = GA_LIST[QUESTIONid]
             print()
@@ -225,29 +119,33 @@ def run_experiment(output_path):
             print("Gold_Answer", Gold_Answer)
 
             try:
-                minirag_context = _as_text(rag.query(QUESTION, param=QueryParam(mode='mini', only_need_context=True))
-                    ).replace("\n", "").replace("\r", "")
-                minirag_answer = _as_text(rag.query(QUESTION, param=QueryParam(mode="mini"))).replace("\n", "").replace("\r", "")
-                print(f'minirag_answer: {minirag_answer}')
-
+                minirag_context = (
+                    rag.query(QUESTION, param=QueryParam(mode='mini', only_need_context=True))
+                    .replace("\n", "")
+                    .replace("\r", "")
+                )
+                minirag_answer = (
+                    rag.query(QUESTION, param=QueryParam(mode="mini"))
+                    .replace("\n", "")
+                    .replace("\r", "")
+                )
             except Exception as e:
                 print("Error in minirag_answer", e)
-                minirag_context = ""
                 minirag_answer = "Error"
 
             try:
                 naive_context = (
                     rag.query(QUESTION, param=QueryParam(mode='naive', only_need_context=True))
-                      .replace("\n", "").replace("\r", "")
+                    .replace("\n", "")
+                    .replace("\r", "")
                 )
                 naive_answer = (
                     rag.query(QUESTION, param=QueryParam(mode="naive"))
-                      .replace("\n", "").replace("\r", "")
+                    .replace("\n", "")
+                    .replace("\r", "")
                 )
-                print(f'naive_answer: {naive_answer}')
             except Exception as e:
                 print("Error in naive_answer", e)
-                naive_context = ""
                 naive_answer = "Error"
 
             writer.writerow([QUESTION, Gold_Answer, minirag_context, minirag_answer, naive_context, naive_answer])

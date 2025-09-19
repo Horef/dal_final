@@ -1,6 +1,6 @@
 """
 This script creates a Streamlit web application for the Technion University Curriculum Q&A system.
-This file should only be run after the index has been created (and saved) using Step_0_index.py.
+This file should only be run after the index has been created (and saved) using Step_0_index_backup.py.
 
 In order to run this file, use the command:
     streamlit run chat_interface/web_app_demo.py from the root directory of the project.
@@ -31,7 +31,7 @@ def load_rag_system():
     # Loading the pickled RAG index saved during indexing
     index_path = os.path.join(args.workingdir, 'checkpoints', 'rag_final.pkl')
     if not os.path.exists(index_path):
-        st.error(f"Index file not found at {index_path}. Please run Step_0_index.py first.")
+        st.error(f"Index file not found at {index_path}. Please run Step_0_index_backup.py first.")
         st.stop()
     with open(index_path, 'rb') as f:
         rag = pickle.load(f)
