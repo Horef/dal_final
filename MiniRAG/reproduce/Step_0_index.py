@@ -82,6 +82,8 @@ _hf_tokenizer = AutoTokenizer.from_pretrained(HF_LLM, trust_remote_code=False)
 use_cuda = torch.cuda.is_available()
 _dtype = torch.float16 if use_cuda else torch.float32
 
+if use_cuda:
+    torch.cuda.empty_cache()
 
 _hf_model = AutoModelForCausalLM.from_pretrained(
     HF_LLM,
@@ -100,9 +102,6 @@ if _hf_tokenizer.pad_token_id is None:
     else:
         _hf_tokenizer.add_special_tokens({"pad_token": "[PAD]"})
         _hf_model.resize_token_embeddings(len(_hf_tokenizer))
-
-if use_cuda:
-    torch.cuda.empty_cache()
 
 # # Manual device placement (M60: CC 5.2; torch 1.13.1 works)
 # device_arg = -1
