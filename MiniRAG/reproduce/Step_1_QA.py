@@ -202,11 +202,6 @@ def run_experiment(output_path):
             print("Gold_Answer", Gold_Answer)
 
             try:
-                minirag_context = (
-                    rag.query(QUESTION, param=QueryParam(mode='mini', only_need_context=True))
-                    .replace("\n", "")
-                    .replace("\r", "")
-                )
                 minirag_answer = (
                     rag.query(QUESTION, param=QueryParam(mode="mini"))
                     .replace("\n", "")
@@ -216,13 +211,18 @@ def run_experiment(output_path):
             except Exception as e:
                 print("Error in minirag_answer", e)
                 minirag_answer = "Error"
-
             try:
-                naive_context = (
-                    rag.query(QUESTION, param=QueryParam(mode='naive', only_need_context=True))
+                minirag_context = (
+                    rag.query(QUESTION, param=QueryParam(mode='mini', only_need_context=True))
                     .replace("\n", "")
                     .replace("\r", "")
                 )
+                print(f'minirag_context: "{minirag_context}"')
+            except Exception as e:
+                print("Error in minirag_context", e)
+                minirag_context = "Error"
+
+            try:
                 naive_answer = (
                     rag.query(QUESTION, param=QueryParam(mode="naive"))
                     .replace("\n", "")
@@ -232,6 +232,16 @@ def run_experiment(output_path):
             except Exception as e:
                 print("Error in naive_answer", e)
                 naive_answer = "Error"
+            try:
+                naive_context = (
+                    rag.query(QUESTION, param=QueryParam(mode='naive', only_need_context=True))
+                    .replace("\n", "")
+                    .replace("\r", "")
+                )
+                print(f'naive_context: "{naive_context}"')
+            except Exception as e:
+                print("Error in naive_context", e)
+                naive_context = "Error"
 
             writer.writerow([QUESTION, Gold_Answer, minirag_context, minirag_answer, naive_context, naive_answer])
 
