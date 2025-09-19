@@ -5,7 +5,7 @@ import sys
 import argparse
 import asyncio
 from typing import List
-import pickle
+import cloudpickle as pickle
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
