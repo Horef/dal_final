@@ -185,7 +185,7 @@ class MiniRAG:
     chunking_func: callable = chunking_by_token_size
     chunking_func_kwargs: dict = field(default_factory=dict)
 
-    max_parallel_insert: int = field(default=int(os.getenv("MAX_PARALLEL_INSERT", 2)))
+    max_parallel_insert: int = field(default=int(os.getenv("MAX_PARALLEL_INSERT", 8)))
 
     def __post_init__(self):
         log_file = os.path.join(self.working_dir, "minirag.log")
