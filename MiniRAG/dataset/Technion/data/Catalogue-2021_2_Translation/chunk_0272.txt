@@ -1,5 +1,0 @@
-below 55 will reflect a failing grade and the student will not
-receive any course credit.
-In both cases, the score will be
-included in the calculation of the student’s weighted cumulative
-average.

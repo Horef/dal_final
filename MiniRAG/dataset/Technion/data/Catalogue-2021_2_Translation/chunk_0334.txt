@@ -1,5 +1,0 @@
-an extension for at least the number of days that they were in
-reserve
-In the case that the new submission date falls
-during the exam period, the deadline will be postponed until
-after the exam period.

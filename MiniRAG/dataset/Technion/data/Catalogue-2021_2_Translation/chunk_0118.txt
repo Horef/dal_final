@@ -1,2 +1,3 @@
-unit which will
-consider whether to terminate their studies and then will
+For each course that is offered by more than one instructor, the head of the unit offering the course will appoint an instructor who will be responsible for that particular course. In addition to the instructor’s role of being responsible for the course, this instructor will also be responsible for the exam, grades, and
+method is identical for all students enrolled in the course. The
+these instructions. The instructor in charge will be the one who

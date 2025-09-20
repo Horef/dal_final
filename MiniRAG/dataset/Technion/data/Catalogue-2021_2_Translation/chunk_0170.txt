@@ -1,5 +1,0 @@
-the
-course will not be denied if the prerequisite requirement is not
-However, the instructor will receive a notification and
-will be able to deny the student enrollment in the course (despite
-the advisor’s approval).

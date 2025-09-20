@@ -1,1 +1,0 @@
-student has repeated a course, only the most recent time that the course was taken will appear on the diploma (any courses that were not

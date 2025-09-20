@@ -1,2 +1,0 @@
-number of choices from which students can select the elective
-4. Completion of requirements through enrollment in general

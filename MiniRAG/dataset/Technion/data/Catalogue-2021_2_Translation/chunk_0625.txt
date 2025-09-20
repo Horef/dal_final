@@ -1,2 +1,0 @@
-there are no external supervisors, the supervisors will
-receive a copy of the “Instructions for Exam Supervisors”

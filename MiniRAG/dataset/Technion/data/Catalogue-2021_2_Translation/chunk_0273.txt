@@ -1,4 +1,0 @@
-be
-included in the calculation of the student’s weighted cumulative
-There are a small number of courses in which the
-grading system is binary --pass/fail. A passing grade entitles

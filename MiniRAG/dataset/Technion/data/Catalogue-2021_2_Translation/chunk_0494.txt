@@ -1,2 +1,0 @@
-that the course was taken will appear on the diploma (any courses that were
-completed will not appear on the lists, but if the course was taken previously and the student received a grade, that grade is valid and will appear on the lists).

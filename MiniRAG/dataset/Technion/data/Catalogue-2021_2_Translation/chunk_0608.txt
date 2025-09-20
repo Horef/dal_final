@@ -1,2 +1,0 @@
-simple scientific
-calculators that have no means of communication can be

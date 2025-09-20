@@ -1,4 +1,0 @@
- The recorded grade will be “incomplete”.
- The course will not be included in the course success rate
-calculation.
- The grade will be recorded in the semester in which the
