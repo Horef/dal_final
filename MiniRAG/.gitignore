@@ -26,3 +26,8 @@ examples/output/
 *.ini
 build/
 minirag-venv/
+
+Technion/
+MiniRAG/Technion_*/
+MiniRAG/logs/
+MiniRAG/LiHua-World/
