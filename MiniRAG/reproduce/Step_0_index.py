@@ -256,10 +256,8 @@ def main():
     if args.checkpoints <= 0 or total <= 1:
         step = None
     else:
-        # spread ~args.checkpoints checkpoints across 'total' items
         step = max(1, total // args.checkpoints)
 
-    # cleaning the checkpoints folder in case it exists
     if os.path.exists(os.path.join(WORKING_DIR, "checkpoints")):
         shutil.rmtree(os.path.join(WORKING_DIR, "checkpoints"))
     if args.save:
@@ -268,11 +266,9 @@ def main():
     for idx, chunk_path in enumerate(chunks, start=1):
         print(f"{idx}/{total}  {chunk_path}")
 
-        # Insert content
         with open(chunk_path, "r", encoding="utf-8", errors="ignore") as f:
             rag.insert(f.read())
 
-        # Periodic checkpointing
         if args.save:
             if step is None:
                 do_checkpoint = (idx == total)
