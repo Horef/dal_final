@@ -1,4 +1,1 @@
-t it is offered
-(Moed A) and/or the second date that it is offered (Moed B).
-B. Students may re-enroll in any course that they have previous
-taken in order to improve their grade in the course in the two
+not be implemented.

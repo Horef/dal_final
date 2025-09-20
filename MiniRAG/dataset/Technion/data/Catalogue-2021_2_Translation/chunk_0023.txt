@@ -1,5 +1,2 @@
-website.
-Applicants who have a different type of matriculation
-certificate are admitted to the Technion on the basis of technical
-exams in mathematics, physics, Hebrew, English, and their
-psychometric exam scores.
+those who hold a Bagrut certificate (certificate that indicates
+that a student has successfully passed Israel’s high school

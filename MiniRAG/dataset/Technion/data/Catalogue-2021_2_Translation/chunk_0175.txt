@@ -1,5 +1,2 @@
-The placement exam in physics is mandatory for all students
-who are admitted to the Technion, except for students admitted
-to programs in Architecture, Landscape Architecture,
-Economics, Education in Science and Technology (in the
-biology, mathematics, or computer science track), or Medicine.
+are defined as
+courses without additional credit. That is, students who

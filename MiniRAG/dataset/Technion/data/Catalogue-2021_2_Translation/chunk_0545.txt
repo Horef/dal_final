@@ -1,3 +1,1 @@
-of seating arrangements has been
-prepared, students must sit only in the seat designated for
-them and not in another seat of their choosing.
+1. Purpose

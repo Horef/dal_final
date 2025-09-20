@@ -1,6 +1,2 @@
-ed number of courses are taught; this allows students to
-close any gaps that they may have in their studies or to progress
-at a faster pace.
-Due to the short time span of the semester, the
-number of weekly teaching hours for each course is double that
-of a regular semester.
+Students are
+accepted to begin in either the winter or spring

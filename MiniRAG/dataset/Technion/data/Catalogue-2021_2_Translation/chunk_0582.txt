@@ -1,4 +1,3 @@
-o take three
-cases in which a student takes more than one exam in a
-given course, the last grade that they received will be the
-final grade.
+of at least two examiners/graders.
+5. Exam dates; exam rooms; exam
+the students to see prior to the course registration period.

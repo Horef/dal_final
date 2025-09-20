@@ -1,4 +1,4 @@
-weighted cumulative
-average.
-There are a small number of courses in which the
-grading system is binary --pass/fail. A passing grade entitles
+Instructors are responsible for assessing students’ level of
+learning and the course exam can be used as one of the means
+to achieve this goal; however, the instructor is not obligated to
+hold an exam at the end of the course.

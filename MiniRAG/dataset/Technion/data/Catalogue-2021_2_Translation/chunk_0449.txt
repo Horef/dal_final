@@ -1,5 +1,1 @@
-student has repeated a course, only the most recent time that the
-course was taken will appear on the diploma (any courses that
-were not completed will not appear on the lists, but if the course
-was taken previously and the student received a grade, that
-grade is valid and will appear on the lists).
+Technion and have taken courses from the standard course basket (as approved by the Senate on May 23, 1993) and whose performance ranks at

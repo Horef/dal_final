@@ -1,5 +1,4 @@
-below 55 will reflect a failing grade and the student will not
-receive any course credit.
-In both cases, the score will be
-included in the calculation of the student’s weighted cumulative
-average.
+which the instructors belong to be the instructor responsible for
+that
+In addition to being responsible for course
+instruction, this instructor will also be responsible for the exam

@@ -1,1 +1,2 @@
-A.
+unit which will
+consider whether to terminate their studies and then will

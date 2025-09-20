@@ -1,2 +1,3 @@
-3. The curriculum must meet the following criteria:
- Completion of fundamental courses within the first 5
+total points that must be accumulated in each track.
+For example, if a student is studying in a track at the Technion
+in which 160 points must be accumulated, and wants to study

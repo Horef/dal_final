@@ -1,3 +1,2 @@
-in each track.
-For example, if a student is studying in a track at the Technion
-in which 160 points must be accumulated, and wants to study
+which the grade earned was less than 65, the extent of prior
+courses that need to be completed, and the duration of studies.

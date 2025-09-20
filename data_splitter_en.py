@@ -1,23 +1,29 @@
+
 # data_splitter_en.py
 # English-friendly, 2-column-aware splitter for MiniRAG
-# CLI:
+# Tailored for academic catalogues/regulations in English (two columns, headings, lists).
+#
+# Key features
+# - Two-column-aware PDF extraction (prefers your project extractor if available)
+# - Heading/list detection to keep sections coherent
+# - Sentence-first splitting with word fallback
+# - Word-safe overlap (no mid-word chunk starts), and clamps overlap < target
+# - Optional cap on total chunks (adjacent merges)
+# - Output helpers: write JSONL manifest and/or per-chunk TXT files
+#
+# Public API
+#   build_chunks_from_txt(text, target_chars=..., overlap_chars=..., min_chars=..., max_chars=...,
+#                         keep_table_as_whole=True, max_chunks=None) -> List[Dict]
+#   build_chunks_from_pdf(pdf_path, extract_fn=None, two_cols=True, rtl=False, max_pages=None, ...) -> List[Dict]
+#   write_chunks_jsonl(chunks, outfile)
+#   write_chunks_txt(chunks, outdir)
+#   write_chunks(chunks, outdir, basename='chunks', clean=True, write_json=False)  # cleans folder; JSON optional
+#
+# CLI example
 #   python data_splitter_en.py INPUT.pdf --two-cols --target 1100 --overlap 150 --min 200 --max 2200 \
 #       --max-chunks 120 --outdir chunks_out --basename catalogue --max-pages 20
-#   The CLI cleans --outdir before writing - removes old chunks
 #
-# JSONL schema (compatible):
-#   { "id": "chunk_0001", "section": "Heading", "page_start": 3, "page_end": 4,
-#     "char_count": 1184, "text": "..." }
-# How to run from main example:
-#python main.py /
-#  --raw-data raw_data_path /
-# --processed-data processed_data_path  /
-# --dataset dataset_path  /
-# --two-cols  /
-# --target 1100 --max 2000 --overlap 150 --min 200  /
-# --max-chunks 120 /
-#
-
+# MIT License (c) 2025
 
 from __future__ import annotations
 import re, json, os, shutil
@@ -55,10 +61,13 @@ _ROMAN_HEADING_RE = re.compile(r"^\s*[IVXLCDM]+\s+[A-Z][^\n]{1,80}$")  # "III RE
 _ALL_CAPS_LINE_RE = re.compile(r"^[A-Z][A-Z0-9 &/\-,'()]{2,80}$")      # short all-caps headings
 
 _COMMON_TERMS = (
+    "Undergraduate Studies",
     "Introduction", "Regulations", "Procedures", "Curriculum", "Semesters",
     "Admission", "Eligibility", "Credits", "Grades", "Exams", "Appeals",
     "Degree", "Graduation", "Distinction", "Specializations", "Tracks",
     "Prerequisites", "Syllabi", "Requirements", "Assessment", "Evaluation",
+    "Admission Requirements", "Admission Tracks", "Study Tracks", "Degree Tracks",
+    "Course of Study",
 )
 
 # Contact-ish lines (emails, URLs, phones)
@@ -243,6 +252,10 @@ def _chunkize_blocks(
     keep_table_as_whole=True
 ) -> List[Dict]:
 
+    # Guard: never allow overlap >= target
+    if overlap_chars >= target_chars:
+        overlap_chars = max(0, int(0.6 * target_chars))
+
     chunks: List[Dict] = []
     buf: List[str] = []
     cur_heading: Optional[str] = None
@@ -253,7 +266,7 @@ def _chunkize_blocks(
     def cur_len() -> int: return sum(len(s)+1 for s in buf)
 
     def flush(force=False):
-        nonlocal buf, cur_heading, cur_page_start, cur_page_end, idx
+        nonlocal buf, cur_heading, cur_page_start, cur_page_end, idx, overlap_chars, target_chars
         text = "\n".join(buf).strip()
         if not text: return
         L = len(text)
@@ -267,8 +280,27 @@ def _chunkize_blocks(
                 "text": text,
             })
             idx += 1
-            if overlap_chars > 0 and len(text) > overlap_chars:
-                buf, cur_page_start = [text[-overlap_chars:]], cur_page_end
+
+            # Word-safe overlap
+            safe_ov = max(0, min(overlap_chars, max(0, target_chars - 20)))
+            if safe_ov > 0 and len(text) > safe_ov:
+                tail = text[-safe_ov:]
+
+                # If tail starts mid-word, skip to next whitespace
+                cut = 0
+                while cut < len(tail) and not tail[cut].isspace():
+                    cut += 1
+                tail = tail[cut:].lstrip()
+
+                # If tail ends mid-word, backtrack to previous whitespace
+                cut2 = len(tail) - 1
+                while cut2 >= 0 and not tail[cut2].isspace():
+                    cut2 -= 1
+                if 0 <= cut2 < len(tail) - 1:
+                    tail = tail[:cut2+1].rstrip()
+
+                buf = [tail] if tail else []
+                cur_page_start = cur_page_end
             else:
                 buf, cur_heading, cur_page_start, cur_page_end = [], None, None, None
 
@@ -311,7 +343,7 @@ def _chunkize_blocks(
     return chunks
 
 def _limit_chunks(chunks: List[Dict], max_chunks: int) -> List[Dict]:
-    """Greedy adjacent merges until len(chunks) ≤ max_chunks, preserving order and section labels of first item in each merge."""
+    """Greedy adjacent merges until len(chunks) ≤ max_chunks, preserving order and first section label."""
     if max_chunks is None or max_chunks < 1 or len(chunks) <= max_chunks:
         return chunks
     merged: List[Dict] = chunks[:]
@@ -322,7 +354,6 @@ def _limit_chunks(chunks: List[Dict], max_chunks: int) -> List[Dict]:
         a["char_count"] = len(a["text"])
         a["page_end"] = b.get("page_end", a["page_end"])
         del merged[i+1]
-        # step forward cautiously
         i = min(i+1, len(merged)-2) if len(merged) > max_chunks else i
     # reassign IDs
     for j, ch in enumerate(merged, 1):
@@ -467,16 +498,18 @@ def write_chunks_txt(chunks: List[Dict], outdir: str) -> None:
         with open(os.path.join(outdir, f"{ch['id']}.txt"), "w", encoding="utf-8") as f:
             f.write(ch["text"].rstrip() + "\n")
 
-# Optional helper that CLEANS the folder first (for your “remove old chunks” requirement)
-def write_chunks(chunks: List[Dict], outdir: str, basename: str="chunks", clean: bool=True) -> None:
+def write_chunks(chunks: List[Dict], outdir: str, basename: str="chunks", clean: bool=True, write_json: bool=False) -> None:
+    """
+    Cleans 'outdir' and writes per-chunk TXT files. If write_json=True, also writes {basename}.jsonl.
+    Defaults to not writing JSON into the dataset folder.
+    """
     if clean and os.path.isdir(outdir):
         shutil.rmtree(outdir)
     os.makedirs(outdir, exist_ok=True)
-    # JSONL
-    jsonl_path = os.path.join(outdir, f"{basename}.jsonl")
-    with open(jsonl_path, "w", encoding="utf-8") as f:
-        for ch in chunks: f.write(json.dumps(ch, ensure_ascii=False) + "\n")
-    # Per-chunk text
+    if write_json:
+        jsonl_path = os.path.join(outdir, f"{basename}.jsonl")
+        with open(jsonl_path, "w", encoding="utf-8") as f:
+            for ch in chunks: f.write(json.dumps(ch, ensure_ascii=False) + "\n")
     write_chunks_txt(chunks, outdir)
 
 # ---------------
@@ -488,13 +521,14 @@ if __name__ == "__main__":
     ap.add_argument("pdf", help="Path to PDF")
     ap.add_argument("--two-cols", action="store_true", default=True, help="Treat pages as two columns (left→right)")
     ap.add_argument("--rtl", action="store_true", default=False, help="Right-to-left reading order")
-    ap.add_argument("--target", type=int, default=100, help="Target characters per chunk (soft)")
+    ap.add_argument("--target", type=int, default=1100, help="Target characters per chunk (soft)")
     ap.add_argument("--overlap", type=int, default=150, help="Overlap characters between chunks")
-    ap.add_argument("--min", dest="min_chars", type=int, default=5, help="Minimum chunk size to flush")
-    ap.add_argument("--max", dest="max_chars", type=int, default=500, help="Hard cap on chunk size")
+    ap.add_argument("--min", dest="min_chars", type=int, default=200, help="Minimum chunk size to flush")
+    ap.add_argument("--max", dest="max_chars", type=int, default=2200, help="Hard cap on chunk size")
     ap.add_argument("--max-chunks", type=int, default=None, help="Upper bound on number of chunks (merges adjacent)")
     ap.add_argument("--outdir", default="chunks_out", help="Output directory (will be cleaned)")
-    ap.add_argument("--basename", default="chunks", help="Base filename for JSONL")
+    ap.add_argument("--basename", default="chunks", help="Base filename for JSONL (only if --write-json)")
+    ap.add_argument("--write-json", action="store_true", default=False, help="Also write JSONL into outdir")
     ap.add_argument("--max-pages", type=int, default=None, help="Process only first N pages (debug)")
     args = ap.parse_args()
 
@@ -527,6 +561,6 @@ if __name__ == "__main__":
             max_chunks=args.max_chunks,
         )
 
-    # Clean outdir and write
-    write_chunks(chunks, args.outdir, basename=args.basename, clean=True)
-    print(f"Wrote {len(chunks)} chunks to {args.outdir} (cleaned). JSONL: {args.basename}.jsonl")
+    # Clean outdir and write (no JSON by default)
+    write_chunks(chunks, args.outdir, basename=args.basename, clean=True, write_json=args.write_json)
+    print(f"Wrote {len(chunks)} chunks to {args.outdir} (cleaned). JSON in outdir: {bool(args.write_json)}")

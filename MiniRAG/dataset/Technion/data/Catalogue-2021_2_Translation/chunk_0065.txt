@@ -1,4 +1,5 @@
-Passing the mechanics portion of the exam is a
-prerequisite for physics-mechanics courses and passing the
-electricity portion of the exam is a prerequisite for physics-
-electricity courses.
+English placement exam
+Taking an English placement exam is mandatory for anyone
+who has been accepted to the Technion; this requirement can be
+met either with the “English” portion of the psychometric test
+or the “AMIR” test.
