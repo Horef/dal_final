@@ -1,4 +1,9 @@
-A. Students who have completed at least 4 units of physics in
-the matriculation (Bagrut) exam and received a grade of 70 or above.
-B. Exemption from Part A of the Placement Exam (Mechanics)
-will be provided to students who have completed the technological track for practical engineers, specializing in mechanics or agricultural mechanics, and who have received a
+and computer science). The courses that are offered to all units within the Technion are
+specified in Appendix C. 1.1.5 Mandatory courses
+Mandatory courses, as well as foundational courses, are
+determined by the Academic Unit’s Council. 1.1.6 Elective courses in the unit
+The list of elective courses that students can enroll in to
+complete their credit quota are specified in the list or lists
+prepared by the academic unit. The number of elective course
+credits shall not be less than 30 credits in a four-year program
+or 20 credits in a three-year program.

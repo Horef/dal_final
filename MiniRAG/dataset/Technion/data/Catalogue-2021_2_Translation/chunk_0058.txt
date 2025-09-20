@@ -1,2 +1,9 @@
-below 55 will reflect a failing grade and the student will not receive any course credit. In both cases, the score will be included in the calculation of the student’s weighted cumulative average. There are a small number of courses in which the grading system is binary --pass/fail. A passing grade entitles
-cumulative average. A student who is registered for a course but
+exempt from it is a condition for taking the following courses:
+Physics 1 or Physics 1M or Physics 1R or Physics 1P. Passing
+Part B of the placement exam in Physics or being exempt from
+it is a condition for taking the following courses: Physics 1 or
+Physics 1M or Physics 1R or Physics 1P. 1.3.3 English studies
+The Placement Exam in English is mandatory for anyone
+accepted to the Technion. The “English” portion of the
+psychometric exam or on the “AMIR” test or on the SAT is
+considered to be a placement exam.

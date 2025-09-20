@@ -1,3 +1,8 @@
-If there is no standard form of instruction for a particular subject/course in one of the semesters, and if the nature of the subject lends itself to learning in a guided reading format, students can be instructed in this way after special approval is given by the head of the unit. Guided reading consists of:
-holding regular meetings (at least once a week) with the instructor in charge, as well as submitting assignments as
-required. The syllabus will be set in accordance with the points specified in Section 1.2.1.
+additional credit
+Courses that contain a lot of similar material are defined as
+courses without additional credit. That is, students who enroll
+in two such courses will not receive any additional credits. Students will not be able to simultaneously enroll in two
+courses that are specified as courses without additional credit. If a student has successfully passed a specific course and then
+enrolls in a course without additional credit, the credits that
+he/she earned in the first course will be revoked and the grade
+earned in the second course will prevail.

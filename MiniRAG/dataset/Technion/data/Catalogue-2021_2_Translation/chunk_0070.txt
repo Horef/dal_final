@@ -1,4 +1,8 @@
- The recorded grade will be “incomplete”.
- The course will not be included in the course success rate calculation.
- The grade will be recorded in the semester in which the
-received during the course of the semester in which they had
+weeks during which the first exam dates (Moed A) and then the
+second exam dates (Moed B) for all courses will be held. During
+the period of time designated for exams, no exams will be held
+for courses worth fewer than 1.5 credits. In these courses,
+grades will be determined on the basis of tests and/or exams that
+were held during the course of the semester. There is no option
+to hold these final exams earlier in the semester, and definitely
+not during the last week of the semester.

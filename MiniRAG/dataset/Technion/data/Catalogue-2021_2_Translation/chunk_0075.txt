@@ -1,1 +1,10 @@
-Undergraduate students who participated in a recognized social activity for the benefit of the community. without receipt of compensation, in the amount of 26 hours per semester during the course of the year will be eligible to receive one credit towards the general Technion elective credit requirement for
+credit. In both cases, the score will be
+included in the calculation of the student’s weighted cumulative
+average. There are a small number of courses in which the
+grading system is binary --pass/fail. A passing grade entitles
+the student to credits whereas a failing grade does not grant the
+student any credits. A binary grade does not influence the
+cumulative average. A student who is registered for a course but
+does not fulfill one of the requirements of the course, such as a
+final exam or submission of a project, might not receive a final
+grade, as per the discretion of the lecturer.

@@ -1,3 +1,11 @@
-Medicine;
-students who have earned at least 4 units of study in physics on the Bagrut and received a grade of 70 or
-Exemption from the mechanics portion of the exam will be granted for students who were enrolled in the technological track for practical engineers, specializing in mechanics or agricultural mechanics, and who have received a grade of 70 or above on the external
+The basic unit of study is a semester-long course, i.e., a course
+that takes place over the course of one semester. Students are
+expected to complete the course, take an exam in the course and
+receive a grade. Students who successfully pass a course, will
+receive the allotted number of credits for that course. Students
+who fail the course will not receive credit for the course. Prior to enrolling in a course, students must pass all the
+prerequisites. Students who take a complementary course or a
+course that is similar to one that they have already taken, will
+have the credits they earned in the previous course cancelled
+and then the credits and grade earned in the more recent course
+will replace it.

@@ -72,13 +72,13 @@ def main():
     for pdf_path in pdf_files:
         base_file = os.path.splitext(os.path.basename(pdf_path))[0]
         try:
-            # Extract text (two-column, English LTR)
+            # Extract text (two-column, English LTR) — DO NOT drop headers for this catalogue
             text = extract_text_from_pdf(
                 pdf_path,
                 two_cols=args.two_cols,
                 rtl=args.rtl,
                 max_pages=args.max_pages,
-                drop_headers=False,  # SAFER: do not risk deleting real body lines
+                drop_headers=False,
             )
 
             # Save extracted text
@@ -87,14 +87,13 @@ def main():
                 f.write(text)
             print(f"[{base_file}] Saved text → {txt_out}")
 
-            # Build chunks (new splitter: safe overlap + no tiny remnant chunks)
+            # Build chunks (table logic disabled inside splitter; never drops text)
             chunks = build_chunks_from_txt(
                 text,
                 target_chars=args.target,
                 overlap_chars=args.overlap,
                 min_chars=args.min_chars,
                 max_chars=args.max_chars,
-                keep_table_as_whole=True,
                 max_chunks=args.max_chunks,
             )
             print(f"[{base_file}] Built {len(chunks)} chunks")

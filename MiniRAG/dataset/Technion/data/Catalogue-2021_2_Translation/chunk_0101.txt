@@ -1,2 +1,15 @@
-total points that must be accumulated in each track.
-For example, if a student is studying in a track at the Technion in which 160 points must be accumulated, and wants to study
+numerical thresholds for eligibility for
+the President’s Excellence and Dean’s Excellence Awards for
+each study route. The thresholds will be determined on the basis
+of academic performance in the previous semester. The
+thresholds will be set in such a way such that, in each study
+
+=== Page 10 ===
+Undergraduate Studies | 2021-2022
+route, there will be approximately 3% of students who will
+receive the President’s Excellence Award and approximately an
+additional 15% of students who will receive the Dean’s
+Excellence Award (including those receiving the President’s
+Excellence Award) – and under the condition that the threshold
+does not fall under 91 (President’s Excellence) and 84 (Dean’s
+Excellence).

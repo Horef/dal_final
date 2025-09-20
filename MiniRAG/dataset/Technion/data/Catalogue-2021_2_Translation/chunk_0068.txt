@@ -1,7 +1,10 @@
-Absence from an exam Students are entitled to not take an exam during the exam period and to receive an alternative solution, such as taking the exam at a different date, if one of the following conditions are met:
- Reserve service on the day of the exam (except for conferences/interviews in which one can choose the date of participation);
- Reserve service of at least three days per week prior to the exam date;
- Reserve service of at least 10 consecutive days or 14 days in total during the semester, up until the start of the exam period;
- Reserve service of at least 10 days in total during the exam period.
-If the course instructor sets another date for the exam as a solution, the date of the alternative exam shall be no later than
-the course instructor sets another date for the exam as a solution, the date of the alternative exam shall be no later
+is appointed by the head of the unit to
+which the instructors belong to be the instructor responsible for
+that course. In addition to being responsible for course
+instruction, this instructor will also be responsible for the exam
+and grades in the particular course. 2.2 Exams
+2.2.1 Evaluating course performance
+Instructors are responsible for assessing students’ level of
+learning and the course exam can be used as one of the means
+to achieve this goal; however, the instructor is not obligated to
+hold an exam at the end of the course.
