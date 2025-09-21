@@ -87,15 +87,23 @@ def get_args():
                         help="Number of checkpoints to save during indexing (default: 10)")
     parser.add_argument("--save", type=int, default=1,
                         help="Whether to save the index after processing (1 = yes, 0 = no; default: 1)")
+    parser.add_argument("--archive", type=int, default=0,
+                        help="Whether to archive existing workingdir if non-empty (1 = yes, 0 = no; default: 0)")
+    parser.add_argument("--continue_index", type=int, default=1,
+                        help="Whether to continue from existing index in workingdir (1 = yes, 0 = no; default: 1)")
+    parser.add_argument("--start_index", type=int, default=1,
+                        help="Start indexing from this document number (default: 1)")
     return parser.parse_args()
 
 args = get_args()
 
 # Prepare working directory (archive if needed)
+archive: bool = (args.archive != 0)
 working_dir = Path(args.workingdir)
-backup = archive_if_exists(working_dir)
-if backup:
-    print(f"Archived previous contents to: {backup}")
+if archive:
+    backup = archive_if_exists(working_dir)
+    if backup:
+        print(f"Archived previous contents to: {backup}")
 print(f"Working directory ready: {working_dir.resolve()}")
 
 # ----------------------------
@@ -258,13 +266,22 @@ def main():
     else:
         step = max(1, total // args.checkpoints)
 
-    if os.path.exists(os.path.join(WORKING_DIR, "checkpoints")):
-        shutil.rmtree(os.path.join(WORKING_DIR, "checkpoints"))
-    if args.save:
-        os.makedirs(os.path.join(WORKING_DIR, "checkpoints"), exist_ok=True)
+    continue_index = (args.continue_index != 0)
 
+    if not continue_index:
+        if os.path.exists(os.path.join(WORKING_DIR, "checkpoints")):
+            shutil.rmtree(os.path.join(WORKING_DIR, "checkpoints"))
+        if args.save:
+            os.makedirs(os.path.join(WORKING_DIR, "checkpoints"), exist_ok=True)
+
+    start_index = args.start_index
+    if start_index < 1 or start_index >= total:
+        start_index = 1
     for idx, chunk_path in enumerate(chunks, start=1):
         print(f"{idx}/{total}  {chunk_path}")
+        if idx < start_index:
+            print("  Skipping (before start_index)")
+            continue
 
         with open(chunk_path, "r", encoding="utf-8", errors="ignore") as f:
             rag.insert(f.read())

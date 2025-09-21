@@ -1,2 +1,4 @@
 .DS_Store
 .MiniRAG/dataset/Technion/data/*
+Technion/ 
+__pycache__/

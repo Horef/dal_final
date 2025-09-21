@@ -28,6 +28,6 @@ build/
 minirag-venv/
 
 Technion/
-MiniRAG/Technion_*/
-MiniRAG/logs/
-MiniRAG/LiHua-World/
+Technion_*/
+logs/
+LiHua-World/
