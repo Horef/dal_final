@@ -85,11 +85,11 @@ def get_args():
     parser.add_argument("--querypath", type=str, default="./dataset/Technion/qa/query_set_old.csv")
     parser.add_argument("--checkpoints", type=int, default=10,
                         help="Number of checkpoints to save during indexing (default: 10)")
-    parser.add_argument("--save", type=int, default=1,
-                        help="Whether to save the index after processing (1 = yes, 0 = no; default: 1)")
-    parser.add_argument("--archive", type=int, default=0,
+    parser.add_argument("--save", type=int, default=0,
+                        help="Whether to save the index after processing (1 = yes, 0 = no; default: 0)")
+    parser.add_argument("--archive", type=int, default=1,
                         help="Whether to archive existing workingdir if non-empty (1 = yes, 0 = no; default: 0)")
-    parser.add_argument("--continue_index", type=int, default=1,
+    parser.add_argument("--continue_index", type=int, default=0,
                         help="Whether to continue from existing index in workingdir (1 = yes, 0 = no; default: 1)")
     parser.add_argument("--start_index", type=int, default=1,
                         help="Start indexing from this document number (default: 1)")

@@ -95,25 +95,25 @@ with col2:
 st.markdown('</div>', unsafe_allow_html=True)
 
 # ===================== SIDEBAR =====================
-st.sidebar.header("Settings")
-BACKEND_URL = st.sidebar.text_input("Backend base URL", value="http://localhost:8000")
-top_k = st.sidebar.slider("Top-K retrieved chunks", 1, 20, 5)
-temperature = st.sidebar.slider("Answer creativity (temperature)", 0.0, 1.0, 0.2, 0.1)
-data_dir = st.sidebar.text_input("Data folder (for indexing)", value="./dataset/Technion/data/")
+# st.sidebar.header("Settings")
+# BACKEND_URL = st.sidebar.text_input("Backend base URL", value="http://localhost:8000")
+# top_k = st.sidebar.slider("Top-K retrieved chunks", 1, 20, 5)
+# temperature = st.sidebar.slider("Answer creativity (temperature)", 0.0, 1.0, 0.2, 0.1)
+# data_dir = st.sidebar.text_input("Data folder (for indexing)", value="./dataset/Technion/data/")
 
-if st.sidebar.button("Build / Update Index", use_container_width=True, key="index_btn"):
-    try:
-        with st.spinner("Indexing…"):
-            r = requests.post(f"{BACKEND_URL}/index", json={"data_dir": data_dir}, timeout=300)
-        if r.status_code != 200:
-            st.error(f"Backend {r.status_code}: {r.text}")
-        else:
-            st.success("Indexing completed.")
-            st.code(json.dumps(r.json(), ensure_ascii=False, indent=2))
-    except Exception as e:
-        st.exception(e)
+# if st.sidebar.button("Build / Update Index", use_container_width=True, key="index_btn"):
+#     try:
+#         with st.spinner("Indexing…"):
+#             r = requests.post(f"{BACKEND_URL}/index", json={"data_dir": data_dir}, timeout=300)
+#         if r.status_code != 200:
+#             st.error(f"Backend {r.status_code}: {r.text}")
+#         else:
+#             st.success("Indexing completed.")
+#             st.code(json.dumps(r.json(), ensure_ascii=False, indent=2))
+#     except Exception as e:
+#         st.exception(e)
 
-st.sidebar.markdown("---")
+# st.sidebar.markdown("---")
 st.sidebar.subheader("History")
 if st.session_state.history:
     for i, turn in enumerate(reversed(st.session_state.history)):

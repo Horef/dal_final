@@ -19,10 +19,6 @@ import csv
 from tqdm import trange
 from minirag import MiniRAG, QueryParam
 from minirag.llm import hf_embed
-# from minirag.llm import (
-#     hf_model_complete,
-#     hf_embed,
-# )
 from minirag.utils import EmbeddingFunc
 from transformers import AutoModel, AutoTokenizer
 
