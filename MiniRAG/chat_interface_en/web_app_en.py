@@ -3,6 +3,8 @@ import json
 import requests
 import streamlit as st
 
+#streamlit run MiniRAG/chat_interface_en/web_app_en.py
+
 st.set_page_config(page_title="Uni-Assistant", page_icon="🎓", layout="wide")
 
 ASSETS_DIR = Path(__file__).parent
