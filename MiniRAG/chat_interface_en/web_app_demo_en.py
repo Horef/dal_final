@@ -157,7 +157,7 @@ with right:
 # Example chips (white)
 st.markdown('<div class="examples">', unsafe_allow_html=True)
 for i, ex in enumerate([
-    "What courses can I take in Semester A with no prerequisites?",
+    "What courses are required in all curricula as foundational?",
     "How do I transfer credits from another university?",
     "Where can I find the 2024–25 CS program handbook?",
 ]):
@@ -170,8 +170,7 @@ if ask_clicked and st.session_state.question.strip():
     time.sleep(0.25)
     q = st.session_state.question.strip()
     a = (
-        "In most programs, Differential Calculus requires meeting the math placement requirement "
-        "or completing the introductory math course. Check your program handbook for the precise rule."
+        "mathematics"
     )
     sources = [
         {
