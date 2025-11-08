@@ -27,7 +27,7 @@ def get_args():
         default="gpt-4o-mini", # A fast and cost-effective new model
         help="OpenAI model to use for evaluation (e.g., 'gpt-4o-mini', 'gpt-4-turbo')."
     )
-    parser.add_argument("--workingdir", type=str, default="./Technion")
+    parser.add_argument("--workingdir", type=str, default="./Step0_res")
     parser.add_argument("--datapath", type=str, default="./dataset/Technion/data/")
     return parser.parse_args()
 
