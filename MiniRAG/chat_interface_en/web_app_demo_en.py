@@ -49,13 +49,6 @@ html, body, [class*="css"] {
 .qa { margin-top:10px; }
 .qa-label { color:#6b7280; font-weight:600; font-size:12px; margin:4px 0; }
 
-/* Sources */
-.source-title{font-weight:700;margin:6px 0}
-.source-box{
-  border:1px solid #eef2f7; border-radius:12px; padding:10px 12px; background:#fcfcfd;
-  white-space:pre-wrap; word-break:break-word;
-}
-
 /* Sidebar history buttons */
 [data-testid="stSidebar"] .stButton > button{
   border:1px solid #e5e7eb; background:#fff; color:#111827;
@@ -74,7 +67,6 @@ st.markdown("""
 (function(){
   const APPLY = () => {
     const root = parent.document;
-    // Look for any button labeled "Ask" or "Ask (Demo)" that is inside our data-ask wrapper
     const btns = root.querySelectorAll('div[data-ask] button');
     btns.forEach(b=>{
       const t = (b.innerText || '').trim();
@@ -89,7 +81,6 @@ st.markdown("""
       }
     });
   };
-  // Apply now and on any Streamlit re-render
   APPLY();
   new MutationObserver(APPLY).observe(parent.document.body, {subtree:true, childList:true});
 })();
@@ -100,13 +91,23 @@ st.markdown("""
 if "question" not in st.session_state:
     st.session_state.question = ""
 if "history" not in st.session_state:
-    st.session_state.history = []    # [{q,a,sources}]
+    st.session_state.history = []    # [{q, a}]
 
 def set_example(q: str):
     st.session_state.question = q
 
 def load_from_history(idx: int):
     st.session_state.question = st.session_state.history[idx]["q"]
+
+# Hard-coded demo Q&A only
+DEMO_QA = {
+    "what courses are required in all curricula as foundational?": "mathematics",
+    "what are the main units within the undergraduate studies center?": "the Undergraduate Program and the Undergraduate Research Program",
+    "which parts does the physics placement exam include?": "Physics, Chemistry, and Maths",
+}
+
+def normalize(txt: str) -> str:
+    return " ".join((txt or "").strip().lower().split())
 
 # ===================== SIDEBAR: HISTORY =====================
 st.sidebar.header("History")
@@ -123,7 +124,7 @@ st.sidebar.markdown('</div>', unsafe_allow_html=True)
 
 # ===================== HEADER =====================
 st.markdown('<div class="header">', unsafe_allow_html=True)
-col1, col2 = st.columns([0.15, 0.85])
+col1, col2 = st.columns([0.15, 0.85], vertical_alignment="center")
 with col1:
     st.markdown('<div class="logo">', unsafe_allow_html=True)
     if LOGO_PATH.exists(): st.image(str(LOGO_PATH))
@@ -145,55 +146,34 @@ with left:
     st.session_state.question = st.text_input(
         label="",
         value=st.session_state.question,
-        placeholder="For example: What are the prerequisites for Differential Calculus?",
+        placeholder="For example: What courses are required in all curricula as foundational?",
         label_visibility="collapsed",
     )
 with right:
-    # The data-ask wrapper is the selector used by the JS above
     st.markdown('<div data-ask class="ask-wrap">', unsafe_allow_html=True)
     ask_clicked = st.button("Ask (Demo)", type="primary", use_container_width=True, key="ask_btn_demo")
     st.markdown('</div>', unsafe_allow_html=True)
 
-# Example chips (white)
-st.markdown('<div class="examples">', unsafe_allow_html=True)
-for i, ex in enumerate([
+# Example chips use your three questions
+examples = [
     "What courses are required in all curricula as foundational?",
-    "How do I transfer credits from another university?",
-    "Where can I find the 2024–25 CS program handbook?",
-]):
+    "What are the main units within the Undergraduate Studies Center?",
+    "Which parts does the Physics placement exam include?",
+]
+st.markdown('<div class="examples">', unsafe_allow_html=True)
+for i, ex in enumerate(examples):
     st.button(ex, key=f"ex_{i}", on_click=set_example, args=(ex,), use_container_width=True)
 st.markdown('</div>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)  # /section
 
-# ===================== DEMO BACKEND =====================
+# ===================== DEMO BACKEND (Q -> A only) =====================
 if ask_clicked and st.session_state.question.strip():
     time.sleep(0.25)
     q = st.session_state.question.strip()
-    a = (
-        "mathematics"
-    )
-    sources = [
-        {
-            "title": "Program Handbook 2024–25",
-            "score": 0.93,
-            "chunk": (
-                "Students must meet the mathematics placement requirement or complete the introductory course "
-                "prior to enrolling in Differential Calculus. This applies to most tracks; exceptions are listed "
-                "in Appendix B."
-            ),
-        },
-        {
-            "title": "Mathematics Dept FAQ",
-            "score": 0.86,
-            "chunk": (
-                "If the placement requirement is not met, students are required to take the introductory math course first. "
-                "See the FAQ for equivalency tables and exemptions."
-            ),
-        },
-    ]
-    st.session_state.history.append({"q": q, "a": a, "sources": sources})
+    a = DEMO_QA.get(normalize(q), "This demo supports only the three sample questions shown above.")
+    st.session_state.history.append({"q": q, "a": a})
 
-# ===================== RESULTS =====================
+# ===================== RESULTS (ONLY Q & A) =====================
 if st.session_state.history:
     turn = st.session_state.history[-1]
 
@@ -206,11 +186,5 @@ if st.session_state.history:
     st.markdown('<div class="qa-label" style="margin-top:10px;">Answer</div>', unsafe_allow_html=True)
     st.write(turn["a"])
     st.markdown('</div>', unsafe_allow_html=True)
-
-    if turn["sources"]:
-        with st.expander("Sources", expanded=False):
-            for i, s in enumerate(turn["sources"], 1):
-                st.markdown(f'<div class="source-title">{i}. {s["title"]} • score {s["score"]:.2f}</div>', unsafe_allow_html=True)
-                st.markdown(f'<div class="source-box">{s["chunk"]}</div>', unsafe_allow_html=True)
 
     st.markdown('</div>', unsafe_allow_html=True)
