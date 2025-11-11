@@ -2,8 +2,8 @@ from pathlib import Path
 import time
 import streamlit as st
 
+# Basic page configuration and assets directory
 st.set_page_config(page_title="Uni-Assistant (Demo)", page_icon="🎓", layout="wide")
-
 ASSETS_DIR = Path(__file__).parent
 LOGO_PATH = ASSETS_DIR / "technion_logo.png"
 
@@ -111,6 +111,7 @@ def normalize(txt: str) -> str:
 
 # ===================== SIDEBAR: HISTORY =====================
 st.sidebar.header("History")
+# If there is history, render buttons for each previous question (click loads it)
 if st.session_state.history:
     for i, turn in enumerate(reversed(st.session_state.history)):
         idx = len(st.session_state.history) - 1 - i
@@ -167,6 +168,7 @@ st.markdown('</div>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)  # /section
 
 # ===================== DEMO BACKEND (Q -> A only) =====================
+# When Ask is clicked, use the normalized question to return a hard-coded answer
 if ask_clicked and st.session_state.question.strip():
     time.sleep(0.25)
     q = st.session_state.question.strip()
@@ -174,6 +176,7 @@ if ask_clicked and st.session_state.question.strip():
     st.session_state.history.append({"q": q, "a": a})
 
 # ===================== RESULTS (ONLY Q & A) =====================
+# If there's any history, show the most recent Q/A pair
 if st.session_state.history:
     turn = st.session_state.history[-1]
 
