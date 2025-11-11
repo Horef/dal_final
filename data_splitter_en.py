@@ -6,7 +6,8 @@ from __future__ import annotations
 import re, json, os, shutil
 from typing import List, Dict, Optional, Callable
 
-# ---------- Heuristics ----------
+# ---------- Heuristics and regex definitions ----------
+#Help with headings, lists, sentences, page breaks detections.
 _PAGE_RE = re.compile(r"^===\s*Page\s+(\d+)\s*===\s*$")
 
 # We explicitly DISABLE table detection for this PDF.
@@ -24,11 +25,15 @@ _LISTISH_RE = re.compile(
     re.VERBOSE,
 )
 
+# Sentence boundary splitter
 _SENT_SPLIT_RE = re.compile(r"(?<=[\.!?…])\s+")
+# Multiple (nested) numbered headings like 1 or 1.2.3
 _NUMBERED_HEADING_RE = re.compile(r"^\s*\d+(?:\.\d+){0,5}\s+\S")
 _APPENDIX_HEADING_RE = re.compile(r"^\s*Appendix\s+[A-Z][\)\.: -]\s*\S", re.IGNORECASE)
 _ROMAN_HEADING_RE = re.compile(r"^\s*[IVXLCDM]+\s+[A-Z][^\n]{1,80}$")
 _ALL_CAPS_LINE_RE = re.compile(r"^[A-Z][A-Z0-9 &/\-,'()]{2,80}$")
+
+# Heading keywords that commonly appear in academic/administrative PDFs
 _COMMON_TERMS = (
     "Undergraduate Studies", "Introduction", "Regulations", "Procedures", "Curriculum",
     "Semesters", "Admission", "Eligibility", "Credits", "Grades", "Exams", "Appeals",
@@ -44,9 +49,17 @@ def _normalize_spaces_keep_tabs(s: str) -> str:
     return re.sub(r"[^\S\t]+", " ", s).strip()
 
 def _looks_all_caps(s: str) -> bool:
+    """Heuristic for ALL CAPS single-line headings."""
     return bool(_ALL_CAPS_LINE_RE.match(s)) and len(s) <= 80
 
 def _is_heading(line: str) -> bool:
+    """
+   Multi-cue heading detector:
+   - numbered/roman/appendix headings
+   - ALL CAPS lines
+   - soft scoring using punctuation density and common heading terms
+   - explicitly not a list item
+   """
     s = line.strip()
     if not s or len(s) > 120: return False
     if _NUMBERED_HEADING_RE.match(s): return True
@@ -72,12 +85,14 @@ def _split_paragraph(s: str, soft: int, hard: int) -> List[str]:
     blen = 0
 
     def flush_buf():
+        """Emit and reset the current sentence buffer."""
         nonlocal out, buf, blen
         if buf:
             out.append(" ".join(buf).strip())
             buf, blen = [], 0
 
     for seg in (p.strip() for p in parts if p.strip()):
+        # If a single sentence exceeds hard cap, split by words around 'soft'
         if len(seg) > hard:
             words, wbuf, wlen = seg.split(), [], 0
             for w in words:
@@ -150,6 +165,7 @@ def _iter_blocks(raw_text: str) -> List[Block]:
         joined.append(ln)
 
     def flush():
+        """Close current buffer into a Block, preserving page span and parent heading."""
         nonlocal buf, buf_kind, buf_page_start
         if not buf: return
         joined: List[str] = []
@@ -195,7 +211,16 @@ def _chunkize_blocks(
     min_chars=200,
     max_chars=2200,
 ) -> List[Dict]:
+    """
+    Convert structured blocks into RAG-friendly chunks with small word-safe overlaps.
 
+    Policy:
+    - Aim near 'target_chars' per chunk.
+    - Never exceed 'max_chars'; split paragraphs if needed.
+    - Ensure minimum 'min_chars' unless forced by boundaries.
+    - Overlap only up to 25% to control duplication.
+    - Respect headings as hard boundaries (no overlap carried across).
+    """
     # Modest overlap: <= 25% of target
     overlap_chars = min(overlap_chars, max(0, int(0.25 * max(1, target_chars))))
 
@@ -211,6 +236,7 @@ def _chunkize_blocks(
         return sum(len(s) + 1 for s in buf)
 
     def word_safe_tail(text: str, desired: int) -> str:
+        """Take a word-safe tail for overlap to avoid mid-token duplication."""
         if desired <= 0 or len(text) <= desired:
             return text
         start = max(0, len(text) - desired)
@@ -226,6 +252,12 @@ def _chunkize_blocks(
         return tail
 
     def flush(force=False, hard_boundary=False):
+        """
+          Emit a chunk when:
+          - force=True (boundary/size trigger)
+          - or accumulated text >= min_chars
+          Also manages one-shot 'carry' overlap and resets buffers/context.
+        """
         nonlocal buf, cur_heading, cur_page_start, cur_page_end, idx, carry, chunks
         text_core = "\n".join(buf).strip()
         if not text_core:
@@ -314,6 +346,10 @@ def _chunks_cover_text(chunks: List[Dict], original_txt: str) -> bool:
 
 # ---------- Extraction (fallback) ----------
 def _extract_pdf_best_effort(pdf_path: str, rtl: bool=False, two_cols: bool=True, max_pages: Optional[int]=None) -> str:
+    """
+    Fallback text extraction using PyMuPDF, with pdfplumber as a second option.
+    - Emits '=== Page N ===' to preserve page numbers for later mapping.
+    """
     try:
         import fitz
         doc = fitz.open(pdf_path)
@@ -362,6 +398,13 @@ def build_chunks_from_txt(
     max_chars=2200,
     max_chunks: Optional[int]=None,
 ) -> List[Dict]:
+    """
+    End-to-end pipeline for pre-extracted text:
+    1) blocks ← _iter_blocks(txt)
+    2) chunks ← _chunkize_blocks(blocks, …)
+    3) coverage guard — if coverage seems off, fallback to a simple sentence window
+    4) optional chunk limit with stable renumbering
+    """
     blocks = _iter_blocks(txt)
     chunks = _chunkize_blocks(blocks, target_chars, overlap_chars, min_chars, max_chars)
     # Coverage guard: if anything looks missing, fall back to sentence-window chunking
@@ -475,6 +518,12 @@ def write_chunks_txt(chunks: List[Dict], outdir: str) -> None:
             f.write(ch["text"].rstrip() + "\n")
 
 def write_chunks(chunks: List[Dict], outdir: str, basename: str="chunks", clean: bool=True, write_json: bool=False) -> None:
+    """
+     Orchestrate writing:
+     - optionally clean and recreate output directory
+     - optionally write a JSONL index
+     - always write per-chunk .txt files
+     """
     if clean and os.path.isdir(outdir): shutil.rmtree(outdir)
     os.makedirs(outdir, exist_ok=True)
     if write_json:
