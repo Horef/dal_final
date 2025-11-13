@@ -41,10 +41,10 @@ At a high level, Uni-Assistant:
 ---
 
 ## Setup
-
+```bash
 ### 1. Clone the repository
 
-```bash
+
 git clone https://github.com/Horef/dal_final.git
 cd dal_final
 
