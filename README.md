@@ -81,7 +81,7 @@ Additionally, make sure you have:
 This step:
 
 - Extracts text from PDFs.
-- Applies **English-friendly chunking** via `data_splitter_en.py` (with logic for headings, lists, and 2-column layouts).
+- Applies **English-friendly chunking** via `data_splitter_en.py`.
 - Writes the resulting chunks into `Processed Data/` in the format expected by MiniRAG.
 
 > The Hebrew splitter (`data_splitter_hebrew.py`) is present but not part of the current pipeline.
@@ -94,7 +94,7 @@ Once you have chunked data in `Processed Data/`, the core pipeline consists of *
 
 ### Step 0 – Build the Index (`step_0_index.py`)
 
-**Script:** `MiniRAG/step_0_index.py` (path may vary slightly – check inside `MiniRAG/`)
+**Script:** `MiniRAG/step_0_index.py`
 
 Responsibilities:
 
