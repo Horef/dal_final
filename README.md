@@ -92,9 +92,9 @@ This step:
 
 Once you have chunked data in `Processed Data/`, the core pipeline consists of **five main scripts** followed by the web interface.
 
-### Step 0 – Build the Index (`step_0_index.py`)
+### Step 0 – Build the Index (`Step_0_index.py`)
 
-**Script:** `MiniRAG/step_0_index.py`
+**Script:** `MiniRAG/reproduce/Step_0_index.py`
 
 Responsibilities:
 
@@ -108,15 +108,12 @@ Responsibilities:
 Example run:
 
     cd MiniRAG
-    python step_0_index.py
-
-Check the script’s `--help` for index paths and configuration options.
-
+    python reproduce/Step_0_index.py
 ---
 
-### Step 1 – Question Answering Experiments (`step_1_QA.py`)
+### Step 1 – Question Answering Experiments (`Step_1_QA.py`)
 
-**Script:** `MiniRAG/step_1_QA.py`
+**Script:** `MiniRAG/reproduce/Step_1_QA.py`
 
 Responsibilities:
 
@@ -134,36 +131,36 @@ Outputs from this step are later used as input to the evaluation pipeline.
 
 Example:
 
-    python step_1_QA.py
+    python reproduce/Step_1_QA.py
     # Add arguments for question files / index location if needed.
 
 ---
 
-### Step 2 – Bridge MiniRAG → RAGAS (`step_2_evaluation.py`)
+### Step 2 – Bridge MiniRAG → RAGAS (`Step_2_evaluation.py`)
 
-**Script:** `MiniRAG/step_2_evaluation.py`
+**Script:** `MiniRAG/reproduce/Step_2_evaluation.py`
 
 This step is the **transition layer** between your adapted MiniRAG outputs and RAGAS.
 
 Responsibilities:
 
-- Take the QA logs from `step_1_QA.py` (questions, answers, contexts, references).
+- Take the QA logs from `Step_1_QA.py` (questions, answers, contexts, references).
 - Convert them into the **RAGAS-compatible dataset format** (e.g., a `datasets.Dataset` or structured JSON/CSV).
 - Save the transformed dataset to disk, ready for metric calculation.
 
 Example:
 
-    python step_2_evaluation.py
+    python Step_2_evaluation.py
 
 ---
 
 ### Step 3 – Compute RAGAS Metrics (`Step_3_calculate_metrics.py`)
 
-**Script:** `MiniRAG/Step_3_calculate_metrics.py` (note the capital `S` in some setups)
+**Script:** `MiniRAG/reproduce/Step_3_calculate_metrics.py` (note the capital `S` in some setups)
 
 Responsibilities:
 
-- Load the dataset produced by `step_2_evaluation.py`.
+- Load the dataset produced by `Step_2_evaluation.py`.
 - Run RAGAS metrics such as (depending on configuration):
   - Answer correctness
   - Faithfulness / factuality
@@ -173,7 +170,7 @@ Responsibilities:
 
 Example:
 
-    python Step_3_calculate_metrics.py
+    python reproduce/Step_3_calculate_metrics.py
 
 The resulting metrics can be used to compare different:
 
@@ -185,14 +182,14 @@ The resulting metrics can be used to compare different:
 
 ## Running the Web Interface
 
-**Script:** `MiniRAG/web_app_en.py` (English interface)
+**Script:** `MiniRAG/chat_interface_en/web_app_en.py` (English interface)
 
 This script provides a simple **web front-end** where Technion students can ask questions about courses, prerequisites, and study programs.
 
 From the project root:
 
     cd MiniRAG
-    python web_app_en.py
+    python chat_interface_en/web_app_en.py
 
 Then open the URL printed in the terminal (often `http://127.0.0.1:8000` or `http://localhost:5000`, depending on the framework used) in your browser or mobile device.
 
