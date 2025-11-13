@@ -3,7 +3,7 @@
 Uni-Assistant is a specialized Retrieval-Augmented Generation (RAG) system for Technion students.  
 Its goal is to provide **a lightweight “in your phone” digital assistant** that can answer questions about:
 
-- Courses and prerequisites  
+- Regulations and procedures 
 - Study programs and degree requirements  
 - Other Technion-related academic information  
 
@@ -15,7 +15,7 @@ The system is built on top of the **MiniRAG** architecture and adds a full evalu
 
 At a high level, Uni-Assistant:
 
-1. **Ingests Technion documents** (course syllabi, regulations, etc.) from PDFs.  
+1. **Ingests Technion documents** (course syllabi, regulations, etc.) from PDFs.
 2. **Chunks** them into segments tailored for English Technion content.  
 3. **Indexes** the chunks using a MiniRAG-style heterogeneous graph and vector store.  
 4. **Answers student questions**.  
@@ -36,6 +36,7 @@ At a high level, Uni-Assistant:
 - `text_from_pdf.py` – PDF to plain-text extraction.
 - `data_splitter_hebrew.py` – Hebrew splitter (currently unused).
 - `*.py` under `MiniRAG/` – Indexing, QA, evaluation, and web app (see pipeline below).
+- `rag_env.yml` – Provided for ease of enviroment reproduction.
 
 ---
 
@@ -50,22 +51,11 @@ cd dal_final
 
 ### 2. Create and activate a virtual environment (recommended)
 
-    python -m venv .venv
-    source .venv/bin/activate      # On Windows: .venv\Scripts\activate
+    conda env create -f rag_env.yml
+    conda activate rag_env
 
-### 3. Install dependencies
 
-If you have a requirements file (e.g., from MiniRAG or this project):
 
-    pip install -r MiniRAG/requirements.txt
-
-Additionally, make sure you have:
-
-    pip install ragas datasets evaluate
-
-(Adjust this section according to your final environment / requirements file.)
-
----
 
 ## Data Preparation and Chunking (Step 1)
 
@@ -82,7 +72,8 @@ This step:
 
 - Extracts text from PDFs.
 - Applies **English-friendly chunking** via `data_splitter_en.py`.
-- Writes the resulting chunks into `Processed Data/` in the format expected by MiniRAG.
+- Writes the resulting chunks into `Processed Data/` in in the format expected by MiniRAG.
+- A dataset is created in MiniRAG/dataset/Technion/data (change --dataset parameter for a different behaviour).
 
 > The Hebrew splitter (`data_splitter_hebrew.py`) is present but not part of the current pipeline.
 
@@ -90,7 +81,7 @@ This step:
 
 ## MiniRAG + RAGAS Pipeline
 
-Once you have chunked data in `Processed Data/`, the core pipeline consists of **five main scripts** followed by the web interface.
+Once you have chunked data, the core pipeline consists of **five main scripts** followed by the web interface.
 
 ### Step 0 – Build the Index (`Step_0_index.py`)
 
@@ -98,10 +89,10 @@ Once you have chunked data in `Processed Data/`, the core pipeline consists of *
 
 Responsibilities:
 
-- Load processed chunks from `Processed Data/`.
+- Load processed chunks from MiniRAG/dataset/Technion/data.
 - Build a **MiniRAG heterogeneous graph** combining:
   - Text chunks
-  - Named entities / metadata
+  - Named entities / metadata extracted via a Small Language Model
 - Create / update the vector index used for retrieval.
 - Persist the index and graph to disk (e.g., under a dedicated folder).
 
@@ -118,21 +109,26 @@ Example run:
 Responsibilities:
 
 - Load the MiniRAG index/graph from Step 0.
+    - currently, the successfull 40h long Step 0 run result is stored in MiniRAG/Step0_res.
+    - In order to use a different dirrectory, change --workingdir parameter.
 - Run QA over:
-  - A predefined question set (e.g., Technion course/prerequisite questions), or
-  - User-provided questions.
+  - A predefined question set (the code expects to find a csv file at MiniRAG/Technion/qa/query_set.csv).
+  - Provide an alternative by changing the --querypath parameter - the header of the csv must be 'Question', 'Golden Answer'.
 - Store:
   - Question
-  - Retrieved context
-  - Model answer
-  - (Optionally) reference/ground truth answer
+  - Reference/ground truth answer
+  - Retrieved  MiniRAG context
+  - MiniRAG answer
+  - Naive Context
+  - Naive Answer
+  
 
 Outputs from this step are later used as input to the evaluation pipeline.
+The output uses '@' as a delimiter. 
 
 Example:
 
     python reproduce/Step_1_QA.py
-    # Add arguments for question files / index location if needed.
 
 ---
 
@@ -140,44 +136,37 @@ Example:
 
 **Script:** `MiniRAG/reproduce/Step_2_evaluation.py`
 
-This step is the **transition layer** between your adapted MiniRAG outputs and RAGAS.
+This step is the **transition layer** between adapted MiniRAG outputs and RAGAS.
 
 Responsibilities:
 
 - Take the QA logs from `Step_1_QA.py` (questions, answers, contexts, references).
-- Convert them into the **RAGAS-compatible dataset format** (e.g., a `datasets.Dataset` or structured JSON/CSV).
-- Save the transformed dataset to disk, ready for metric calculation.
+- Use an LLM (via OpenAI key) to evaluate faithfulness, answer relevancy, context recall, and context precision of each question-answer.
+- Save the scores as csv files for acumilative metrics calculation.
+
+**IMPORTANT:** You MUST set your OpenAI API key as an environment variable
 
 Example:
-
-    python Step_2_evaluation.py
+    
+    python reproduce/Step_2_evaluation.py
 
 ---
 
 ### Step 3 – Compute RAGAS Metrics (`Step_3_calculate_metrics.py`)
 
-**Script:** `MiniRAG/reproduce/Step_3_calculate_metrics.py` (note the capital `S` in some setups)
+**Script:** `MiniRAG/reproduce/Step_3_calculate_metrics.py`
 
 Responsibilities:
 
 - Load the dataset produced by `Step_2_evaluation.py`.
-- Run RAGAS metrics such as (depending on configuration):
-  - Answer correctness
-  - Faithfulness / factuality
-  - Context relevance / recall
-  - Answer completeness
-- Produce an aggregated report (per question and/or global scores).
+- Calculate RAGAS metrics averages for MiniRAG / Naive RAG
+- Produce an aggregated report.
 
 Example:
 
     python reproduce/Step_3_calculate_metrics.py
 
-The resulting metrics can be used to compare different:
-
-- Indexing strategies  
-- Chunking heuristics  
-- Models or prompting templates  
-
+ 
 ---
 
 ## Running the Web Interface
@@ -189,9 +178,7 @@ This script provides a simple **web front-end** where Technion students can ask 
 From the project root:
 
     cd MiniRAG
-    python chat_interface_en/web_app_en.py
-
-Then open the URL printed in the terminal (often `http://127.0.0.1:8000` or `http://localhost:5000`, depending on the framework used) in your browser or mobile device.
+    streamlit run chat_interface_en/web_app_en.py
 
 ---
 
@@ -204,13 +191,13 @@ Then open the URL printed in the terminal (often `http://127.0.0.1:8000` or `htt
    Run `main.py` (uses `data_splitter_en.py`) to create processed chunks in `Processed Data/`.
 
 3. **Index with MiniRAG**  
-   Run `step_0_index.py` to build the graph + vector index.
+   Run `Step_0_index.py` to build the graph + vector index.
 
 4. **Generate QA data**  
-   Run `step_1_QA.py` to collect question–answer–context pairs.
+   Run `Step_1_QA.py` to collect question–answer–context pairs.
 
 5. **Convert to RAGAS format**  
-   Run `step_2_evaluation.py`.
+   Run `Step_2_evaluation.py`.
 
 6. **Evaluate**  
    Run `Step_3_calculate_metrics.py` to compute RAGAS metrics.
