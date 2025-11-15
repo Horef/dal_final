@@ -47,7 +47,7 @@ At a high level, Uni-Assistant:
 
 git clone https://github.com/Horef/dal_final.git
 cd dal_final
-
+```
 
 ### 2. Create and activate a virtual environment (recommended)
 
